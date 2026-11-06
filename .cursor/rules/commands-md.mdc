@@ -1,0 +1,18 @@
+---
+description: Keep COMMANDS.md current whenever a new CLI, npm script, Prisma, Docker, or workflow command is introduced.
+alwaysApply: true
+---
+
+# COMMANDS.md
+
+Whenever you introduce a new terminal command, CLI command, package script, database command, or development workflow in this project:
+
+1. Check whether it already exists in `COMMANDS.md`.
+2. If it doesn't, add it under the appropriate category.
+3. Include the exact command, what it does, and when/why to use it.
+4. If a command is deprecated or replaced, update the documentation (mark deprecated; do not leave a stale instruction).
+5. Never add commands that are not relevant to the project's current tech stack (Node 24, npm, NestJS, Jest, Prisma 6, PostgreSQL, Redis, Docker Compose, Git). Do not document Azure Functions, TypeORM, AWS, or LangGraph until those are actually adopted.
+
+Keep `COMMANDS.md` updated as the project evolves. Do not wait for the user to explicitly ask.
+
+`FLOW.md` documents only code that exists. `DECISIONS.md` has its own always-on rule (`decisions-md.mdc`).

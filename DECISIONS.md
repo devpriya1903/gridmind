@@ -8,7 +8,7 @@ Each entry answers: **what we chose, why, what we gave up, and what we explicitl
 
 ## How to add an entry
 
-1. Next number (`D012`, …).
+1. Next number (`D013`, …).
 2. Date (the day the choice was made).
 3. Status: `accepted` | `superseded by Dxxx` | `deferred`.
 4. Context, decision, reasons, tradeoff, alternatives.
@@ -166,7 +166,7 @@ Interview use: this file is the “why” behind the repo, not a tutorial.
 ## D007 — Prisma 6 over TypeORM (and over Prisma 7 for now)
 
 - **Date:** 2026-11-04
-- **Status:** accepted (implementation in progress)
+- **Status:** accepted (schema + `init_devices` migration applied; Nest `PrismaService` and HTTP routes not in `src/` yet)
 
 **Context:** Need an ORM so Nest talks to Postgres without raw SQL for every query. GridMind will grow devices → readings → anomalies (relational, foreign keys).
 
@@ -188,12 +188,14 @@ Interview use: this file is the “why” behind the repo, not a tutorial.
 
 **Alternatives:** TypeORM; Drizzle (too extra for a first Nest project); raw `pg`.
 
+**Progress (2026-11-06):** `prisma@6` / `@prisma/client@6` are in `package.json`. `Device` is in `prisma/schema.prisma`. Migration `prisma/migrations/20261106112329_init_devices` exists. Prisma CLI generated `prisma.config.ts` (`engine: "classic"`, `DATABASE_URL` from env). We keep that file rather than fighting the CLI. Still missing from `src/`: `PrismaModule` / `PrismaService` and any `prisma.device` calls.
+
 ---
 
 ## D008 — Nest `ConfigModule` as the only env entry point
 
 - **Date:** 2026-11-04
-- **Status:** accepted (implementation in progress)
+- **Status:** accepted (ConfigModule wired; Observe still uses `process.env`)
 
 **Decision:** `@nestjs/config` with `ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' })`. Application code should inject `ConfigService`, not sprinkle `process.env` (except leftover Observe bootstrap until that is cleaned up).
 
@@ -201,12 +203,14 @@ Interview use: this file is the “why” behind the repo, not a tutorial.
 
 **Tradeoff:** A bit more wiring than `process.env.PORT`. Worth it before credentials multiply.
 
+**Progress (2026-11-06):** `ConfigModule.forRoot` is in `src/app.module.ts`. `main.ts` still reads `process.env.PORT` for `listen`. Observe still reads `process.env.OBSERVE_*`. No service injects `ConfigService` yet.
+
 ---
 
 ## D009 — Global `ValidationPipe` for DTO validation
 
 - **Date:** 2026-11-04
-- **Status:** accepted (implementation in progress)
+- **Status:** accepted (pipe in `main.ts`; no DTOs yet — no POST routes)
 
 **Decision:** In `main.ts`, `app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }))` plus `class-validator` / `class-transformer` on DTOs (e.g. `CreateDeviceDto`).
 
@@ -214,18 +218,22 @@ Interview use: this file is the “why” behind the repo, not a tutorial.
 
 **Tradeoff:** Stricter API; clients must send the documented shape. That is what we want for a portfolio API.
 
+**Progress (2026-11-06):** Global `ValidationPipe` (`whitelist`, `forbidNonWhitelisted`, `transform`) is in `src/main.ts`. `class-validator` / `class-transformer` are installed. `CreateDeviceDto` is not in `src/` yet.
+
 ---
 
 ## D010 — `/health` via `@nestjs/terminus`, Postgres first, Redis later
 
 - **Date:** 2026-11-04
-- **Status:** accepted (implementation in progress)
+- **Status:** accepted (package installed; `HealthModule` not in `src/` yet)
 
 **Decision:** Dedicated health module/controller at `GET /health`. Check Postgres (Terminus `PrismaHealthIndicator` if the versions fit; otherwise `SELECT 1` via Prisma). Do **not** use `/` or `/devices` as the probe.
 
 **Why:** Load balancers (later AWS ALB) need a cheap liveness/readiness URL that does not depend on business data. Redis is already in Compose but not in the Nest process yet, so a Redis probe would be a lie or a new client — defer.
 
 **Tradeoff:** Health will say “up” even if Redis is down, until Redis is integrated.
+
+**Progress (2026-11-06):** `@nestjs/terminus` is in `package.json`. There is still no `src/health/` and no `GET /health`.
 
 ---
 
@@ -239,6 +247,26 @@ Interview use: this file is the “why” behind the repo, not a tutorial.
 **Why:** A device without a reading is still a skeleton. A reading without a device has nothing to hang on. Auth in front of empty tables delays the “I stored energy data” proof. Anomalies need readings. The assistant needs real tools (those APIs).
 
 **Tradeoff:** The API is briefly unauthenticated. Acceptable on localhost; must not ship that way.
+
+**Progress (2026-11-06):** `Device` table exists via Prisma migration. Nest still has only `GET /` → Hello World. No `DevicesModule`.
+
+---
+
+## D012 — Living docs: `FLOW.md` (actual code only) and `COMMANDS.md` (verified commands)
+
+- **Date:** 2026-11-05 (`FLOW.md`); 2026-11-06 (`COMMANDS.md`)
+- **Status:** accepted
+
+**Context:** First full project; chat rationale will not stay in memory. Need a map of execution and a command cheat sheet without documenting the future as if it already runs.
+
+**Decision:**
+
+- **`FLOW.md`:** entry point, startup order, and request call chains for files that exist in `src/` (and real test entrypoints). Do not describe Prisma/devices/health routes until those files exist. Append when we add modules.
+- **`COMMANDS.md`:** exact CLI / npm / Docker / Prisma / Git commands that belong to the current stack, with what / when / why. Mark deprecated commands. Do not list AWS, LangGraph, TypeORM, or Azure until adopted.
+
+**Why:** FLOW is how to read the running app. COMMANDS is how to operate it. Mixing “planned” flow into FLOW would teach a system that is not there.
+
+**Tradeoff:** Two extra files to update on every meaningful change. Accepted so learning and interviews stay accurate.
 
 ---
 
@@ -276,3 +304,4 @@ These are on the target stack or were discussed, but **no implementation choice 
 | D009 | Global ValidationPipe |
 | D010 | `/health` + Terminus; Redis probe later |
 | D011 | Devices then readings; auth/AWS/AI after |
+| D012 | FLOW.md (actual-only) and COMMANDS.md |
