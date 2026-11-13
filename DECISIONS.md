@@ -8,7 +8,7 @@ Each entry answers: **what we chose, why, what we gave up, and what we explicitl
 
 ## How to add an entry
 
-1. Next number (`D016`, …).
+1. Next number (`D015`, …).
 2. Date (the day the choice was made).
 3. Status: `accepted` | `superseded by Dxxx` | `deferred`.
 4. Context, decision, reasons, tradeoff, alternatives.
@@ -314,32 +314,6 @@ Interview use: this file is the “why” behind the repo, not a tutorial.
 
 ---
 
-## D015 — GitHub Actions CI on PRs; auto-delete merged branches; no e2e-in-CI yet
-
-- **Date:** 2026-11-13
-- **Status:** accepted
-
-**Context:** Need a merge gate for a public portfolio repo. Stack screenshot listed GitHub Actions, tests, and dependency/security scanning. Branch clutter after merge is noisy.
-
-**Decision:**
-
-- Call it **CI** (the workflow) plus **branch protection / ruleset** (the merge gate). Together: a PR pipeline. Not “Azure DevOps pipeline,” not ECS deploy.
-- Workflow `.github/workflows/ci.yml` on `pull_request` and `push` to `main`: `npm ci`, `prisma validate`, `lint`, `format:check`, `npm test`, `npm run build`. Node **24**.
-- **Merge conflicts** stay a GitHub native block, not an Action.
-- **Automatically delete head branches** in repo settings (restore from the PR). Not a workflow step — GitHub already does this cleanly.
-- **Do not** require a human approval while this is a solo repo.
-- **Defer in CI:** `test:e2e` (boots `AppModule` → Prisma `$connect` needs Postgres), Docker image build, `npm audit` as a hard fail, CodeQL, Dependabot auto-merge.
-
-**Why this set:** they match scripts we already run locally. Format **check** (not `format` write) so CI does not silently rewrite files. Prisma **validate** catches schema mistakes without a database.
-
-**Why not e2e yet:** the e2e spec imports `AppModule`, which connects to Postgres. Adding a Compose/Postgres service job is the next CI slice, after readings or when e2e covers `/devices`.
-
-**Tradeoff:** A green PR does not prove `/devices` against a real DB. Accepted so the first pipeline is short and reliable.
-
-**Alternatives:** One job vs many (one job is enough until e2e needs Postgres); require reviews (blocks a solo merge).
-
----
-
 ## Explicitly not decided yet (do not pretend otherwise)
 
 These are on the target stack or were discussed, but **no implementation choice is locked** beyond “later”:
@@ -352,8 +326,7 @@ These are on the target stack or were discussed, but **no implementation choice 
 - Vector store for RAG
 - Which LLM API / LangGraph graph shape
 - Prisma vs other for embeddings
-- Hard-fail `npm audit` / CodeQL / Dependabot as required checks
-- E2E in CI (needs a Postgres service)
+- GitHub Actions workflow contents / scanners
 - ECS vs other AWS compute; Dockerfile layout
 - Whether to remove or keep `@nestjs/observe` in production
 - Replacing the default Nest README with a project README
@@ -378,4 +351,3 @@ These are on the target stack or were discussed, but **no implementation choice 
 | D012 | FLOW.md (actual-only) and COMMANDS.md |
 | D013 | Unique device `name`; POST duplicate → 409 |
 | D014 | Postman Collection v3 YAML; folders by domain |
-| D015 | GitHub Actions CI; auto-delete branches; e2e later |

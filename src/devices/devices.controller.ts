@@ -4,15 +4,15 @@ import { CreateDeviceDto } from './dto/create-device.dto';
 
 @Controller('devices')
 export class DevicesController {
-  constructor(private readonly devicesService: DevicesService) {}
+    constructor(private readonly devicesService: DevicesService) {}
 
-  @Post()
-  create(@Body() dto: CreateDeviceDto) {
-    return this.devicesService.create(dto);
-  }
+    @Post()
+    create(@Body() dto: CreateDeviceDto) {
+        return this.devicesService.create(dto);
+    }
 
-  @Get()
-  findAll() {
-    return this.devicesService.findAll();
-  }
+    @Get()
+    findAll() {
+        return this.devicesService.findAll();
+    }
 }

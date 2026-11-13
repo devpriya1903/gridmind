@@ -153,9 +153,8 @@ Short form: `npx nest g module prisma` is the same as `npx nest generate module 
 | `npm run test:cov` | Jest plus coverage report | When you want coverage numbers. |
 | `npm run test:debug` | Jest with inspector, one worker | Breakpoint-debug a unit test. |
 | `npm run test:e2e` | Jest e2e (`test/jest-e2e.json`) — boots `AppModule` and hits HTTP | After changing routes. Uses in-memory Nest, not Compose, until tests talk to Postgres. |
-| `npm run lint` | Oxlint on `src/` and `test/` | Before commit; also a required CI check. |
-| `npm run format` | Prettier **writes** `src/**/*.ts` and `test/**/*.ts` | Fix formatting locally. |
-| `npm run format:check` | Prettier **checks** without writing | CI and before commit; fails if files are unformatted. |
+| `npm run lint` | Oxlint on `src/` and `test/` | Before commit if the linter is noisy. |
+| `npm run format` | Prettier on `src/**/*.ts` and `test/**/*.ts` | Format TypeScript only. |
 
 ---
 
@@ -168,30 +167,6 @@ Short form: `npx nest g module prisma` is the same as `npx nest generate module 
 | `git commit -m "message"` | Creates a commit | Small commits: bootstrap, data, features. |
 | `git push` | Uploads commits to GitHub `origin` | After a local commit. |
 | `git remote -v` | Shows GitHub remotes | Confirm you are in the cloned repo. |
-| `git switch -c <branch>` | Creates and checks out a feature branch | All work except hotfixes on `main`. Example: `git switch -c feat/readings`. |
-| `git stash push -u -m "message"` | Saves tracked + untracked changes, cleans the working tree | Park unfinished work without a commit. `-u` includes new files. |
-| `git stash list` | Lists stashes | See what you saved. |
-| `git stash pop` | Restores the latest stash and **removes** it from the list | Continue that work. |
-| `git stash apply` | Restores the latest stash and **keeps** it | When you might need the same stash again. |
-| `git stash drop` | Deletes the latest stash | After you are sure you do not need it. |
-
----
-
-## GitHub CI and pull requests
-
-Workflow file: `.github/workflows/ci.yml`. Job name: **lint, format, test, build**. Runs on every PR and on pushes to `main`.
-
-| Command | What it does | When / why |
-|---|---|---|
-| `npx prisma validate` | Parses `schema.prisma` (no Postgres required) | CI: catch a broken schema before tests. |
-| `npm ci` | Clean install from the lockfile | CI only (reproducible). Locally keep using `npm install`. |
-
-**Not a CI job:** merge conflicts. GitHub already blocks Merge until the PR is conflict-free.
-
-**GitHub UI (required once per repo):**
-
-1. **Settings → General → Pull Requests → Automatically delete head branches** — on. After merge, GitHub deletes the feature branch. On the merged PR, **Restore branch** brings it back.
-2. **Settings → Rules → Rulesets** (or Branch protection on `main`): require the status check **lint, format, test, build**. Do not require a review while you are the only contributor (it would block you).
 
 ---
 
