@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { DevicesModule } from './devices/devices.module';
+import { ReadingsModule } from './readings/readings.module';
 import { HealthModule } from './health/health.module';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
@@ -25,6 +26,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     }),
     PrismaModule,
     DevicesModule,
+    ReadingsModule,
     HealthModule,
   ],
   controllers: [AppController],
