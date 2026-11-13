@@ -29,7 +29,7 @@ The user removed earlier IDs of that first kind on purpose. Prefer architecture 
 
 ## How to edit
 
-1. Read `DECISIONS.md` first. Next unused ID is **D013** (as of D012).
+1. Read `DECISIONS.md` first. Next unused ID is **D015** (as of D014).
 2. Append new entries at the **bottom**, before “Explicitly not decided yet”, then update the Index.
 3. Each new entry: date, status (`accepted` | `superseded by Dxxx` | `deferred`), context, decision, why, tradeoff, alternatives.
 4. **Do not rewrite history.** If we reverse a choice, add a new ID that supersedes the old one; leave the original.

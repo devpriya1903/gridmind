@@ -1,0 +1,6 @@
+$kind: collection
+name: 02 Health
+description: |-
+  Terminus probe. Pings Postgres through Prisma. Does not check Redis.
+  Run this after Compose is up; a 503 usually means Postgres is down.
+order: 2000

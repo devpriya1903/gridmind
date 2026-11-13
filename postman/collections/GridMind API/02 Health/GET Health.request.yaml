@@ -1,0 +1,24 @@
+$kind: http-request
+name: 'GET /health — Postgres ping'
+description: |-
+  HealthController.check → PrismaHealthIndicator.pingCheck('postgres').
+
+  Expect **200** when Postgres is reachable:
+  `{ "status": "ok", "info": { "postgres": { "status": "up" } }, ... }`
+
+  Expect **503** if Prisma cannot ping the database.
+method: GET
+url: '{{baseUrl}}/health'
+order: 1000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status is 200', function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test('Postgres reports up', function () {
+        const body = pm.response.json();
+        pm.expect(body.status).to.eql('ok');
+        pm.expect(body.info.postgres.status).to.eql('up');
+      });

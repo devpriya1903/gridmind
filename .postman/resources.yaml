@@ -3,6 +3,7 @@ workspace:
   id: 7f42514b-6f0f-41d5-b59a-352d969d92b5
 
 # All resources in the `postman/` folder are automatically registered in Local View.
+# Collection: postman/collections/GridMind API/  Environment: postman/environments/Local.environment.yaml
 # Point to additional files outside the `postman/` folder to register them individually. Example:
 #localResources:
 #  collections:

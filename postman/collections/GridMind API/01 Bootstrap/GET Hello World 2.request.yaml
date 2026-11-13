@@ -1,0 +1,20 @@
+$kind: http-request
+name: 'GET /test — Hello World 2'
+description: |-
+  AppController.getHello2 → AppService.getHello2.
+
+  Expect: **200** body `Hello World 2!` (plain text).
+  Nest logs `inside getHello2` on the server.
+method: GET
+url: '{{baseUrl}}/test'
+order: 2000
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status is 200', function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test('Body is Hello World 2!', function () {
+        pm.expect(pm.response.text()).to.eql('Hello World 2!');
+      });

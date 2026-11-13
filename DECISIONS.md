@@ -8,7 +8,7 @@ Each entry answers: **what we chose, why, what we gave up, and what we explicitl
 
 ## How to add an entry
 
-1. Next number (`D013`, …).
+1. Next number (`D015`, …).
 2. Date (the day the choice was made).
 3. Status: `accepted` | `superseded by Dxxx` | `deferred`.
 4. Context, decision, reasons, tradeoff, alternatives.
@@ -188,7 +188,7 @@ Interview use: this file is the “why” behind the repo, not a tutorial.
 
 **Alternatives:** TypeORM; Drizzle (too extra for a first Nest project); raw `pg`.
 
-**Progress (2026-11-06):** `prisma@6` / `@prisma/client@6` are in `package.json`. `Device` is in `prisma/schema.prisma`. Migration `prisma/migrations/20261106112329_init_devices` exists. Prisma CLI generated `prisma.config.ts` (`engine: "classic"`, `DATABASE_URL` from env). We keep that file rather than fighting the CLI. Still missing from `src/`: `PrismaModule` / `PrismaService` and any `prisma.device` calls.
+**Progress (2026-11-06):** `PrismaModule` / `PrismaService` are in `src/` (`$connect` on init). `DevicesService` calls `prisma.device.create` / `findMany`. Migrations: `init_devices`, then `unique_device_name` (see D013).
 
 ---
 
@@ -218,7 +218,7 @@ Interview use: this file is the “why” behind the repo, not a tutorial.
 
 **Tradeoff:** Stricter API; clients must send the documented shape. That is what we want for a portfolio API.
 
-**Progress (2026-11-06):** Global `ValidationPipe` (`whitelist`, `forbidNonWhitelisted`, `transform`) is in `src/main.ts`. `class-validator` / `class-transformer` are installed. `CreateDeviceDto` is not in `src/` yet.
+**Progress (2026-11-06):** `CreateDeviceDto` is used on `POST /devices` (trim `name`, required `name`/`type`).
 
 ---
 
@@ -233,7 +233,7 @@ Interview use: this file is the “why” behind the repo, not a tutorial.
 
 **Tradeoff:** Health will say “up” even if Redis is down, until Redis is integrated.
 
-**Progress (2026-11-06):** `@nestjs/terminus` is in `package.json`. There is still no `src/health/` and no `GET /health`.
+**Progress (2026-11-06):** `GET /health` uses Terminus `PrismaHealthIndicator.pingCheck`. Redis still not probed.
 
 ---
 
@@ -248,7 +248,7 @@ Interview use: this file is the “why” behind the repo, not a tutorial.
 
 **Tradeoff:** The API is briefly unauthenticated. Acceptable on localhost; must not ship that way.
 
-**Progress (2026-11-06):** `Device` table exists via Prisma migration. Nest still has only `GET /` → Hello World. No `DevicesModule`.
+**Progress (2026-11-06):** `POST /devices` and `GET /devices` work. Device **name** is unique (D013). Readings still next.
 
 ---
 
@@ -267,6 +267,50 @@ Interview use: this file is the “why” behind the repo, not a tutorial.
 **Why:** FLOW is how to read the running app. COMMANDS is how to operate it. Mixing “planned” flow into FLOW would teach a system that is not there.
 
 **Tradeoff:** Two extra files to update on every meaningful change. Accepted so learning and interviews stay accurate.
+
+---
+
+## D013 — Device `name` is unique in Postgres; duplicate POST → 409
+
+- **Date:** 2026-11-06
+- **Status:** accepted
+
+**Context:** `id` is a UUID, so two rows could share the same `name` (`Inverter-01`) and confuse operators. Nest `@unique` in `schema.prisma` is not enough until a migration applies the index. Duplicate rows already in the table blocked the first apply.
+
+**Decision:**
+
+- `Device.name` is `@unique` in Prisma. Migration `20261106123000_unique_device_name` creates unique index `Device_name_key`.
+- `POST /devices` trims `name`, then `prisma.device.create`. Prisma `P2002` → `ConflictException` (HTTP **409**), not a 500.
+- Uniqueness is **case-sensitive** after trim (`Inverter-01` and `inverter-01` are different).
+- Existing duplicate `Inverter-01` rows were reduced to one (oldest kept) so the index could be created. That was a one-time data fix, not an API.
+
+**Why database unique, not only a Nest `findFirst`:** two concurrent POSTs can both pass a pre-check. Postgres is the source of truth.
+
+**Tradeoff:** A second device cannot reuse a retired name until we add a soft-delete/rename story. Accepted for operator clarity.
+
+**Alternatives:** Unique on `(name, site)` later if we add sites; case-insensitive unique (`LOWER(name)`) if mixed-case duplicates become a problem.
+
+---
+
+## D014 — Postman Collection v3 YAML in the repo, folders by domain
+
+- **Date:** 2026-11-13
+- **Status:** accepted
+
+**Context:** Two untitled `Hello World` requests lived in `postman/collections/GridMind Bootstrap/`. Devices, health, and later domains had no collection. Agents would otherwise forget to document new routes.
+
+**Decision:**
+
+- One collection: `postman/collections/GridMind API/` (schema v3: directory + `*.request.yaml`).
+- Folders numbered by domain (`01 Bootstrap`, `02 Health`, `03 Devices`).
+- `postman/environments/Local.environment.yaml` holds `baseUrl`.
+- New/changed Nest routes update the collection in the same turn (Cursor rule `postman-collection.mdc`).
+
+**Why:** Diffs are one file per request; Local View already watches `postman/`. A single JSON collection is harder to review and easier to drift from `src/`.
+
+**Tradeoff:** Newman cannot run v3; Postman CLI would be needed for CI later. Local Send from the app is enough now.
+
+**Alternatives:** One `collection.json` (v2.1) for Newman; OpenAPI as the source of truth (deferred until the API is larger).
 
 ---
 
@@ -305,3 +349,5 @@ These are on the target stack or were discussed, but **no implementation choice 
 | D010 | `/health` + Terminus; Redis probe later |
 | D011 | Devices then readings; auth/AWS/AI after |
 | D012 | FLOW.md (actual-only) and COMMANDS.md |
+| D013 | Unique device `name`; POST duplicate → 409 |
+| D014 | Postman Collection v3 YAML; folders by domain |

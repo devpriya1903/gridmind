@@ -1,0 +1,13 @@
+$kind: collection
+name: 03 Devices
+description: |-
+  Device registry (Prisma `Device`). Needs Postgres + applied migrations.
+
+  POST body (CreateDeviceDto):
+  - `name` (string, required, trimmed) — unique in the database
+  - `type` (string, required)
+  - `status` (optional: `online` | `offline` | `fault`; default `offline`)
+
+  Extra JSON keys → **400**. Duplicate `name` → **409**.
+  List is newest `createdAt` first.
+order: 3000

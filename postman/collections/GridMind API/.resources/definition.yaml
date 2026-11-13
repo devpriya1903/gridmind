@@ -1,0 +1,21 @@
+$kind: collection
+name: GridMind API
+description: |-
+  Local NestJS API for GridMind. One folder per domain; one request file per
+  HTTP route (plus a 409 example for unique device names).
+
+  Before Send:
+  1. `docker compose up -d` (Postgres on :5432)
+  2. `npm run start:dev` (API on {{baseUrl}})
+  3. Select environment **Local**
+
+  Keep this collection in lockstep with `src/**/*.controller.ts`. Auth is not
+  implemented yet — no tokens.
+
+  Routes today:
+  - Bootstrap: GET /, GET /test
+  - Health: GET /health
+  - Devices: POST /devices, GET /devices
+variables:
+  baseUrl: http://localhost:3000
+  deviceName: Inverter-01

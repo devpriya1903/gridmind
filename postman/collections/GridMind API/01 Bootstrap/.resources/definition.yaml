@@ -1,0 +1,6 @@
+$kind: collection
+name: 01 Bootstrap
+description: |-
+  Scaffold routes from AppController. Plain text, no database.
+  Use these to confirm Nest is listening before hitting /health or /devices.
+order: 1000
