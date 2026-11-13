@@ -1,0 +1,28 @@
+---
+description: Keep the Postman Collection v3 YAML in postman/ in lockstep with Nest HTTP routes.
+alwaysApply: true
+---
+
+# Postman collection
+
+Whenever you add, change, or remove an HTTP route in `src/**/*.controller.ts`, update the collection in the **same turn**. Do not wait to be asked.
+
+## Where it lives
+
+- Collection: `postman/collections/GridMind API/`
+- Local env: `postman/environments/Local.environment.yaml` (`baseUrl`)
+- Format: Postman Collection schema **v3** (folder tree, `*.request.yaml`)
+
+## How to update
+
+1. One **folder** per domain (`01 Bootstrap`, `02 Health`, `03 Devices`, …). New domain → new numbered folder + `.resources/definition.yaml`.
+2. One **`*.request.yaml`** per route. Name: `METHOD /path — short label`.
+3. Description: controller/service, request body/DTO, expected status and shape.
+4. Use `'{{baseUrl}}/…'` (quoted). POST/PATCH/PUT include JSON `body` matching the DTO.
+5. Light `afterResponse` tests for the happy-path status and payload.
+6. Document important error contracts that already exist in Nest (e.g. devices unique name → 409).
+7. Do not invent routes that are not in `src/` yet.
+
+## Docs
+
+If you introduce a Postman CLI or new env, add it to `COMMANDS.md`.

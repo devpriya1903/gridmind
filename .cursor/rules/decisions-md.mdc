@@ -1,0 +1,43 @@
+---
+description: Keep DECISIONS.md current for architecture and tooling tradeoffs; do not wait to be asked.
+alwaysApply: true
+---
+
+# DECISIONS.md
+
+Update `DECISIONS.md` in the same turn as any meaningful choice. Do not wait for the user to ask. Do not rely on chat memory.
+
+## What belongs here
+
+Log a new ID when we choose or change:
+
+- A library, framework, ORM, runtime version, or test runner
+- Hosting or local data plane (Compose, cloud, Functions vs Nest)
+- Schema shape or migration strategy
+- How env, validation, health, or auth will work
+- An explicit deferral (“not now, and why”)
+- A tradeoff we explained out loud (why this, why not the alternative)
+
+## What does not belong here
+
+- Bootstrap mechanics (clone vs init, PATH fixes, one-off CLI errors)
+- “We keep DECISIONS.md” meta entries
+- Features or routes that are only planned — those wait until we actually decide a design
+- Tutorials or command lists (`COMMANDS.md` / `FLOW.md` handle those)
+
+The user removed earlier IDs of that first kind on purpose. Prefer architecture and tooling.
+
+## How to edit
+
+1. Read `DECISIONS.md` first. Next unused ID is **D015** (as of D014).
+2. Append new entries at the **bottom**, before “Explicitly not decided yet”, then update the Index.
+3. Each new entry: date, status (`accepted` | `superseded by Dxxx` | `deferred`), context, decision, why, tradeoff, alternatives.
+4. **Do not rewrite history.** If we reverse a choice, add a new ID that supersedes the old one; leave the original.
+5. **Do** update **Status** and a short **Progress** line on an existing ID when implementation catches up (packages installed, files in `src/`, still missing X). That is not a rewrite of the decision.
+6. Keep “Explicitly not decided yet” honest: add items we discussed but did not lock; remove items once an ID covers them.
+
+## Pair with other docs
+
+- `FLOW.md`: only execution that exists in code.
+- `COMMANDS.md`: only commands for the current stack.
+- This file: only why we chose something.
