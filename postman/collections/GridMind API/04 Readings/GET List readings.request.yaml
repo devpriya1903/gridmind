@@ -4,7 +4,8 @@ description: |-
   ReadingsController.findAll → ReadingsService.findAllForDevice.
 
   Needs collection variable `deviceId` (set by POST Create device).
-  Expect **200** JSON array. Empty `[]` is valid. Unknown device → **404**.
+  Expect **200** JSON array. Empty `[]` is valid.
+  Missing-device **404** is asserted on POST Create reading's script.
 method: GET
 url: '{{baseUrl}}/devices/{{deviceId}}/readings'
 order: 1000
@@ -12,11 +13,9 @@ scripts:
   - type: afterResponse
     language: text/javascript
     code: |-
-      pm.test('Status is 200 or 404', function () {
-        pm.expect([200, 404]).to.include(pm.response.code);
+      pm.test('Status is 200', function () {
+        pm.response.to.have.status(200);
       });
-      if (pm.response.code === 200) {
-        pm.test('Body is a JSON array', function () {
-          pm.expect(pm.response.json()).to.be.an('array');
-        });
-      }
+      pm.test('Body is a JSON array', function () {
+        pm.expect(pm.response.json()).to.be.an('array');
+      });

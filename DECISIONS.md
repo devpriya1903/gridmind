@@ -8,7 +8,7 @@ Each entry answers: **what we chose, why, what we gave up, and what we explicitl
 
 ## How to add an entry
 
-1. Next number (`D017`, …).
+1. Next number (`D018`, …).
 2. Date (the day the choice was made).
 3. Status: `accepted` | `superseded by Dxxx` | `deferred`.
 4. Context, decision, reasons, tradeoff, alternatives.
@@ -364,6 +364,23 @@ Interview use: this file is the “why” behind the repo, not a tutorial.
 
 ---
 
+## D017 — Postman: one request per route; 409/404 in the same script
+
+- **Date:** 2026-11-14
+- **Status:** accepted
+
+**Context:** Duplicate Postman requests existed only to hit unique-name **409** and missing-device **404**. Those can be sent from the Tests tab of the happy-path request.
+
+**Decision:** Keep one `*.request.yaml` per Nest route. After a successful Send, `pm.sendRequest` asserts the error contract (duplicate `name` → 409; unknown `deviceId` → 404). Do not add extra requests whose only job is a status code.
+
+**Why:** The collection stays a map of the API, not a list of every failure mode. Collection Run still covers 409/404 without a second click.
+
+**Tradeoff:** Tests are a bit harder to read than a dedicated request. Accepted.
+
+**Alternatives:** Extra 409/404 requests (removed); Newman/Postman CLI in CI later.
+
+---
+
 ## Explicitly not decided yet (do not pretend otherwise)
 
 These are on the target stack or were discussed, but **no implementation choice is locked** beyond “later”:
@@ -404,3 +421,4 @@ These are on the target stack or were discussed, but **no implementation choice 
 | D014 | Postman Collection v3 YAML; folders by domain |
 | D015 | GitHub Actions CI; auto-delete branches; e2e later |
 | D016 | Reading belongs to Device; nested routes; metric+value |
+| D017 | Postman errors in Scripts (`sendRequest`), not extra requests |

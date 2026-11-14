@@ -3,10 +3,11 @@ name: 'POST /devices/:deviceId/readings — Create'
 description: |-
   ReadingsController.create → ReadingsService.create.
 
-  Needs `deviceId` from POST Create device. Stores one telemetry row
-  (`metric` + `value`) belonging to that device.
+  Needs `deviceId` from POST Create device. Main Send is **201**.
+  The after-response script POSTs the same body to a UUID that is not
+  in Device and expects **404**. No separate missing-device request.
 
-  Expect **201** JSON: `id`, `deviceId`, `metric`, `value`, `recordedAt`, `createdAt`.
+  Reading `id` is this sample's PK; `deviceId` is the FK (they differ).
 method: POST
 url: '{{baseUrl}}/devices/{{deviceId}}/readings'
 order: 2000
@@ -24,6 +25,9 @@ scripts:
   - type: afterResponse
     language: text/javascript
     code: |-
+      const baseUrl = pm.variables.get('baseUrl');
+      const missingId = '00000000-0000-4000-8000-000000000000';
+
       pm.test('Status is 201', function () {
         pm.response.to.have.status(201);
       });
@@ -34,3 +38,23 @@ scripts:
         pm.expect(body.metric).to.eql('power_kw');
         pm.expect(body.value).to.eql(12.5);
       });
+
+      if (pm.response.code === 201) {
+        pm.sendRequest(
+          {
+            url: baseUrl + '/devices/' + missingId + '/readings',
+            method: 'POST',
+            header: { 'Content-Type': 'application/json' },
+            body: {
+              mode: 'raw',
+              raw: JSON.stringify({ metric: 'power_kw', value: 1 }),
+            },
+          },
+          function (err, res) {
+            pm.test('Missing device returns 404', function () {
+              pm.expect(err).to.equal(null);
+              pm.expect(res.code).to.eql(404);
+            });
+          },
+        );
+      }
