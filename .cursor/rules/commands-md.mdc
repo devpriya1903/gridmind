@@ -15,4 +15,6 @@ Whenever you introduce a new terminal command, CLI command, package script, data
 
 Keep `COMMANDS.md` updated as the project evolves. Do not wait for the user to explicitly ask.
 
+**Do not document every Nest scaffold.** `npx nest generate module|controller|service <name>` is already listed once as a pattern. Do not add prisma/devices/health/readings (or future domains) as extra rows. Same for other repeating recipes (one `migrate dev --name <slug>` row is enough; do not append each migration name as a new command).
+
 `FLOW.md` documents only code that exists. `DECISIONS.md` has its own always-on rule (`decisions-md.mdc`).

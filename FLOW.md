@@ -2,7 +2,7 @@
 
 How control actually moves between **files that exist today**. Append when we add modules. Do **not** describe routes or services that are not in `src/` yet.
 
-Last updated: 2026-11-06 (devices unique `name`, health, Prisma).
+Last updated: 2026-11-13 (readings belong to a device).
 
 ---
 
@@ -12,7 +12,7 @@ Last updated: 2026-11-06 (devices unique `name`, health, Prisma).
 |---|---|
 | `package.json` | Scripts that start Node (`start:dev`, `start`) |
 | `src/main.ts` | **Process entry point** — ValidationPipe, then listen |
-| `src/app.module.ts` | Root module — Config, Observe, Prisma, Devices, Health |
+| `src/app.module.ts` | Root module — Config, Observe, Prisma, Devices, Readings, Health |
 | `src/app.controller.ts` / `src/app.service.ts` | `GET /` and `GET /test` |
 | `src/prisma/prisma.module.ts` | Global module exporting `PrismaService` |
 | `src/prisma/prisma.service.ts` | Prisma client; `$connect` on module init |
@@ -20,6 +20,10 @@ Last updated: 2026-11-06 (devices unique `name`, health, Prisma).
 | `src/devices/devices.controller.ts` | `POST /devices`, `GET /devices` |
 | `src/devices/dto/create-device.dto.ts` | Validates/trims POST body |
 | `src/devices/devices.service.ts` | Prisma create/list; maps unique violations to 409 |
+| `src/readings/readings.module.ts` | Registers readings controller + service |
+| `src/readings/readings.controller.ts` | `POST/GET /devices/:deviceId/readings` |
+| `src/readings/dto/create-reading.dto.ts` | Validates metric, value, optional recordedAt |
+| `src/readings/readings.service.ts` | 404 if device missing; Prisma create/list readings |
 | `src/health/health.module.ts` | Terminus + health controller |
 | `src/health/health.controller.ts` | `GET /health` pings Postgres |
 
@@ -51,6 +55,7 @@ npm run start:dev
         │  ConfigModule.forRoot (.env)
         │  PrismaModule (global) → constructs PrismaService → onModuleInit → $connect
         │  DevicesModule → DevicesService, DevicesController
+        │  ReadingsModule → ReadingsService, ReadingsController
         │  HealthModule → HealthController
         │  AppController / AppService
         ▼
@@ -60,7 +65,7 @@ npm run start:dev
         └─ app.listen(process.env.PORT ?? 3000)
 ```
 
-**Who constructs whom:** Nest instantiates `PrismaService` once (global). `DevicesService` and `HealthController` receive that same instance.
+**Who constructs whom:** Nest instantiates `PrismaService` once (global). `DevicesService`, `ReadingsService`, and `HealthController` receive that same instance.
 
 ---
 
@@ -123,6 +128,43 @@ HTTP GET /devices
 
 ---
 
+## Request: `POST /devices/:deviceId/readings`
+
+`ParseUUIDPipe` runs on `:deviceId` before the method. Invalid UUID → **400**.
+
+```
+HTTP POST /devices/:deviceId/readings  JSON body
+        │
+        ▼
+  ParseUUIDPipe + ValidationPipe (CreateReadingDto)
+        │  extra JSON → 400; missing metric/value → 400
+        ▼
+  ReadingsController.create(deviceId, dto)
+        │
+        ▼
+  ReadingsService.create
+        ├─ prisma.device.findUnique
+        │     missing → NotFoundException → HTTP 404
+        └─ prisma.reading.create({ deviceId, metric, value, recordedAt? })
+              success → 201 JSON row (FK to Device)
+```
+
+A reading cannot exist without a device: Postgres `Reading_deviceId_fkey` (`ON DELETE CASCADE`).
+
+---
+
+## Request: `GET /devices/:deviceId/readings`
+
+```
+HTTP GET /devices/:deviceId/readings
+  → ReadingsController.findAll
+  → ReadingsService.findAllForDevice
+        ├─ device missing → 404
+        └─ prisma.reading.findMany({ where: { deviceId }, orderBy: recordedAt desc })
+```
+
+---
+
 ## Request: `GET /health`
 
 ```
@@ -145,6 +187,10 @@ Does not check Redis.
 | `DevicesService.create` | `src/devices/devices.service.ts` | controller | `prisma.device.create`; on P2002 → `ConflictException` |
 | `DevicesController.findAll` | `src/devices/devices.controller.ts` | `GET /devices` | `DevicesService.findAll` |
 | `DevicesService.findAll` | `src/devices/devices.service.ts` | controller | `prisma.device.findMany` |
+| `ReadingsController.create` | `src/readings/readings.controller.ts` | `POST /devices/:deviceId/readings` | `ReadingsService.create` |
+| `ReadingsService.create` | `src/readings/readings.service.ts` | controller | `device.findUnique`; then `reading.create` |
+| `ReadingsController.findAll` | `src/readings/readings.controller.ts` | `GET /devices/:deviceId/readings` | `ReadingsService.findAllForDevice` |
+| `ReadingsService.findAllForDevice` | `src/readings/readings.service.ts` | controller | `device.findUnique`; then `reading.findMany` |
 | `HealthController.check` | `src/health/health.controller.ts` | `GET /health` | Terminus `pingCheck` |
 
 ---
@@ -161,7 +207,6 @@ Does not check Redis.
 ## Not in the graph yet
 
 - Redis client / cache
-- Readings / telemetry
 - Auth
 - `ConfigService` injection (ConfigModule is loaded; most code still uses `process.env` for Observe/PORT)
 

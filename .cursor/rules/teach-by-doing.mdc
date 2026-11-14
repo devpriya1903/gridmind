@@ -1,0 +1,31 @@
+---
+description: Guide file-by-file; do not create implementation files unless the user asks to write them.
+alwaysApply: true
+---
+
+# Teach by doing
+
+This repo is a first full-stack build. The user learns Nest, Prisma, and request flow by **creating files themselves**.
+
+## Default
+
+When adding a feature (module, route, schema, DTO, test, workflow):
+
+1. Do **not** create or edit implementation files (`src/`, `prisma/schema.prisma`, migrations) in that turn unless the user explicitly says to write/apply them.
+2. Explain the **next one file** (or one command): path, what Nest/Prisma will do with it, who will call whom.
+3. Give the full contents they should type (or a tight diff).
+4. Wait until they have done it (or pasted an error) before the next file.
+5. Order is always: **decision (why) → schema/migration if data → module → service → DTO → controller → register in AppModule → prove with curl/Postman → then docs** (`DECISIONS.md`, `FLOW.md`, `COMMANDS.md`, Postman).
+
+Docs and Cursor rules are an exception: keep `DECISIONS.md` / `FLOW.md` / `COMMANDS.md` / Postman in lockstep **after** the user has working code, or when they ask you to update docs.
+
+## Allowed without waiting
+
+- Read the repo to see what exists.
+- Answer “why” / framework questions.
+- Propose the sequence as a numbered list **before** step 1.
+
+## Not allowed by default
+
+- Generating a whole feature (`readings/`, CI, auth, …) in one turn.
+- Running `nest generate` / `prisma migrate` for them unless they ask you to run it.

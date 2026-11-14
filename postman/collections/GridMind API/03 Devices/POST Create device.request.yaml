@@ -39,4 +39,5 @@ scripts:
         pm.expect(body.name).to.eql(pm.collectionVariables.get('deviceName'));
         pm.expect(body.type).to.eql('inverter');
         pm.expect(body.status).to.eql('offline');
+        pm.collectionVariables.set('deviceId', body.id);
       });

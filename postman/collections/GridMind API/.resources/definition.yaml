@@ -16,6 +16,8 @@ description: |-
   - Bootstrap: GET /, GET /test
   - Health: GET /health
   - Devices: POST /devices, GET /devices
+  - Readings: POST/GET /devices/:deviceId/readings
 variables:
   baseUrl: http://localhost:3000
   deviceName: Inverter-01
+  deviceId: ''
