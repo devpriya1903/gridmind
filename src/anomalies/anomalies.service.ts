@@ -20,11 +20,11 @@ export class AnomaliesService {
 
         if (!severity) { return null; }
 
-        return this.prisma.anomaly.create({
+        return await this.prisma.anomaly.create({
             data: {
                 readingId: reading.id,
                 severity,
-                reason: 'power_kw ${reading.value} exceeded threshold',
+                reason: `power_kw ${reading.value} exceeded threshold`,
             },
         });
     }

@@ -36,4 +36,5 @@ scripts:
         );
       }
     language: text/javascript
+examples: .resources/GET -devices-deviceId-anomalies — List.resources/examples
 order: 1000
