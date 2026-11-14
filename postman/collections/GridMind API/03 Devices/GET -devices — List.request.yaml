@@ -1,5 +1,9 @@
 $kind: http-request
 name: GET /devices — List
+description: |-
+  DevicesController.findAll → DevicesService.findAll.
+
+  Expect **200** array, newest `createdAt` first.
 url: "{{baseUrl}}/devices"
 method: GET
 scripts:

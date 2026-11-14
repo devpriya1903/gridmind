@@ -1,7 +1,7 @@
 $kind: collection
 description: |-
   Local NestJS API for GridMind. One folder per domain; one request file per
-  HTTP route (plus a 409 example for unique device names).
+  HTTP route. Error status (409/404) is asserted in Scripts via sendRequest.
 
   Before Send:
   1. `docker compose up -d` (Postgres on :5432)
@@ -14,8 +14,9 @@ description: |-
   Routes today:
   - Bootstrap: GET /, GET /test
   - Health: GET /health
-  - Devices: POST /devices, GET /devices
+  - Devices: POST /devices, GET /devices, GET /devices/:id
   - Readings: POST/GET /devices/:deviceId/readings
+  - Anomalies: GET /devices/:deviceId/anomalies
 variables:
   baseUrl: http://localhost:3000
   deviceName: Inverter-01

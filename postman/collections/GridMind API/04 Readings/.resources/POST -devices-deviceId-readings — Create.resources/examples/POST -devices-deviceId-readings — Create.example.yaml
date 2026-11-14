@@ -1,0 +1,39 @@
+$kind: http-example
+name: POST /devices/:deviceId/readings — Create
+description: >-
+  ReadingsController.create → ReadingsService.create.
+
+
+  Needs `deviceId` from POST Create device.
+
+  Body is CreateReadingDto: `metric` (required), `value` (number, required),
+
+  optional `recordedAt` (ISO-8601). Extra keys → **400**. Missing device →
+  **404**.
+request:
+  url: "{{baseUrl}}/devices/{{deviceId}}/readings"
+  method: POST
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "metric": "power_kw",
+        "value": 12.5
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    x-powered-by: Express
+    content-type: application/json; charset=utf-8
+    content-length: "207"
+    etag: W/"cf-3rhUsejjEtd2mSCLmbzgYWCJLuw"
+    date: Sat, 14 Nov 2026 17:08:01 GMT
+    connection: keep-alive
+    keep-alive: timeout=5
+  body:
+    type: json
+    content: '{"id":"296a6aec-00bb-4519-bc60-bf39c3f97d8d","deviceId":"4f9dd870-2d5b-43cb-b0ed-45d1039947a4","metric":"power_kw","value":12.5,"recordedAt":"2026-11-14T17:08:01.910Z","createdAt":"2026-11-14T17:08:01.910Z"}'
+order: 1794676084523
