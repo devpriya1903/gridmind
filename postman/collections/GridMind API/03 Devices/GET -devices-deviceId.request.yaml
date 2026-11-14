@@ -1,5 +1,5 @@
 $kind: http-request
-name: 'GET /devices/:id — Detail'
+name: GET /devices/:id — Detail
 description: |-
   DevicesController.findById → DevicesService.findById.
 
@@ -9,11 +9,11 @@ description: |-
   Needs collection variable `deviceId` (set by POST Create device).
   Expect **200** one device object (not an array).
 method: GET
-url: '{{baseUrl}}/devices/{{deviceId}}'
+url: "{{baseUrl}}/devices/{{deviceId}}"
+examples: .resources/GET -devices-deviceId.resources/examples
 order: 1500
 scripts:
   - type: afterResponse
-    language: text/javascript
     code: |-
       const deviceId = pm.collectionVariables.get('deviceId');
       const baseUrl = pm.variables.get('baseUrl');
@@ -44,3 +44,4 @@ scripts:
           },
         );
       }
+    language: text/javascript
