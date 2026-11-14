@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { DevicesModule } from './devices/devices.module';
 import { ReadingsModule } from './readings/readings.module';
 import { HealthModule } from './health/health.module';
+import { AnomaliesModule } from './anomalies/anomalies.module';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -28,6 +29,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     DevicesModule,
     ReadingsModule,
     HealthModule,
+    AnomaliesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

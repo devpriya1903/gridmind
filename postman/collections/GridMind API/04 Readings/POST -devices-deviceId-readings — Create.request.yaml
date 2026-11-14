@@ -1,26 +1,12 @@
 $kind: http-request
 name: POST /devices/:deviceId/readings — Create
-description: >-
-  ReadingsController.create → ReadingsService.create.
-
-
-  Needs `deviceId` from POST Create device.
-
-  Body is CreateReadingDto: `metric` (required), `value` (number, required),
-
-  optional `recordedAt` (ISO-8601). Extra keys → **400**. Missing device →
-  **404**.
-method: POST
 url: "{{baseUrl}}/devices/{{deviceId}}/readings"
+method: POST
 headers:
   Content-Type: application/json
 body:
   type: json
-  content: |-
-    {
-      "metric": "power_kw",
-      "value": 12.5
-    }
+  content: ""
 scripts:
   - type: afterResponse
     code: |-
@@ -58,5 +44,4 @@ scripts:
         );
       }
     language: text/javascript
-examples: .resources/POST -devices-deviceId-readings — Create.resources/examples
 order: 2000

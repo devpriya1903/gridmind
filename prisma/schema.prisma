@@ -31,6 +31,18 @@ model Reading {
   value      Float
   recordedAt DateTime @default(now())
   createdAt  DateTime @default(now())
+  anomalies  Anomaly[]
 
   @@index([deviceId, recordedAt])
+}
+
+model Anomaly {
+  id        String   @id @default(uuid())
+  readingId String
+  reading   Reading  @relation(fields: [readingId], references: [id], onDelete: Cascade)
+  severity  String
+  reason    String
+  createdAt DateTime @default(now())
+
+  @@index([readingId])
 }

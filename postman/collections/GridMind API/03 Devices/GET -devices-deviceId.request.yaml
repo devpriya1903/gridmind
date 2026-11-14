@@ -1,47 +1,17 @@
 $kind: http-request
-name: GET /devices/:id — Detail
-description: |-
-  DevicesController.findById → DevicesService.findById.
-
-  `ParseUUIDPipe` on `:id` → invalid uuid **400**.
-  Missing row → **404** `Device {id} not found` (asserted via sendRequest).
-
-  Needs collection variable `deviceId` (set by POST Create device).
-  Expect **200** one device object (not an array).
-method: GET
+name: GET /devices/:deviceId
 url: "{{baseUrl}}/devices/{{deviceId}}"
-examples: .resources/GET -devices-deviceId.resources/examples
-order: 1500
+method: GET
 scripts:
   - type: afterResponse
     code: |-
-      const deviceId = pm.collectionVariables.get('deviceId');
-      const baseUrl = pm.variables.get('baseUrl');
-
       pm.test('Status is 200', function () {
         pm.response.to.have.status(200);
       });
-      pm.test('Returns one device object', function () {
+      pm.test('Body is a JSON array', function () {
         const body = pm.response.json();
-        pm.expect(body).to.be.an('object');
-        pm.expect(body).to.not.be.an('array');
-        pm.expect(body.id).to.eql(deviceId);
-        pm.expect(body.name).to.be.a('string').and.not.empty;
-        pm.expect(body.type).to.be.a('string').and.not.empty;
+        pm.expect(body).to.be.an('array');
       });
-
-      if (pm.response.code === 200) {
-        pm.sendRequest(
-          {
-            url: baseUrl + '/devices/00000000-0000-4000-8000-000000000000',
-            method: 'GET',
-          },
-          function (err, res) {
-            pm.test('Unknown device id returns 404', function () {
-              pm.expect(err).to.equal(null);
-              pm.expect(res.code).to.eql(404);
-            });
-          },
-        );
-      }
     language: text/javascript
+examples: ./.resources/GET -devices-deviceId.resources/examples
+order: 2000

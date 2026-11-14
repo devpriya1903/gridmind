@@ -14,7 +14,7 @@ description: |-
   Routes today:
   - Bootstrap: GET /, GET /test
   - Health: GET /health
-  - Devices: POST /devices, GET /devices, GET /devices/:id
+  - Devices: POST /devices, GET /devices
   - Readings: POST/GET /devices/:deviceId/readings
 variables:
   baseUrl: http://localhost:3000

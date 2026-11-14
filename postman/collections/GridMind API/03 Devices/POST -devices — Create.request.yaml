@@ -1,26 +1,12 @@
 $kind: http-request
 name: POST /devices — Create
-description: |-
-  DevicesController.create → DevicesService.create.
-
-  Pre-request sets a unique `deviceName` so the main Send is **201**.
-  The after-response script then POSTs the **same name again** and
-  expects **409** (Prisma P2002). No separate duplicate request.
-
-  Optional `status` omitted → Prisma default `offline`.
-method: POST
 url: "{{baseUrl}}/devices"
-examples: .resources/POST Create device.resources/examples
-order: 2000
+method: POST
 headers:
   Content-Type: application/json
 body:
   type: json
-  content: |-
-    {
-      "name": "{{deviceName}}",
-      "type": "inverter"
-    }
+  content: ""
 scripts:
   - type: beforeRequest
     code: pm.collectionVariables.set('deviceName', 'Inverter-' + Date.now());
@@ -63,3 +49,4 @@ scripts:
         );
       }
     language: text/javascript
+order: 3000

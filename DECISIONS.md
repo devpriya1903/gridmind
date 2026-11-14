@@ -8,7 +8,7 @@ Each entry answers: **what we chose, why, what we gave up, and what we explicitl
 
 ## How to add an entry
 
-1. Next number (`D019`, …).
+1. Next number (`D020`, …).
 2. Date (the day the choice was made).
 3. Status: `accepted` | `superseded by Dxxx` | `deferred`.
 4. Context, decision, reasons, tradeoff, alternatives.
@@ -248,7 +248,7 @@ Interview use: this file is the “why” behind the repo, not a tutorial.
 
 **Tradeoff:** The API is briefly unauthenticated. Acceptable on localhost; must not ship that way.
 
-**Progress (2026-11-14):** `GET /devices/:id` (`findById`, 404 if missing). Readings (D016). Auth still later.
+**Progress (2026-11-14):** `GET /devices/:id`. Readings (D016). Anomalies GET (D019); evaluate not yet called from create reading. Auth still later.
 
 ---
 
@@ -424,6 +424,26 @@ When we tighten `CreateDeviceDto`, `@IsIn` this slug list (400 on unknown type).
 
 ---
 
+## D019 — Anomalies: in-process rules on `power_kw`; GET list; no public POST
+
+- **Date:** 2026-11-14
+- **Status:** accepted (GET + `evaluate` exist; `evaluate` not yet called from `ReadingsService.create`)
+
+**Context:** Phase 0 needs `getAlerts()` as REST. Clients must not invent anomaly rows.
+
+**Decision:**
+
+- Prisma `Anomaly` belongs to `Reading` (cascade). Index on `readingId`.
+- `GET /devices/:deviceId/anomalies` lists via `reading.deviceId`. Missing device → 404.
+- No `POST /anomalies`. `AnomaliesService.evaluate(reading)` applies v1 rules: ignore non-`power_kw`; `value > 100` → `critical`; `value > 50` → `warning`; else no row.
+- Engine is intended to run **after** a reading is saved, in the same request (worker/queue later).
+
+**Why in-process first:** one process, easy to debug. Queue comes when the simulator is loud.
+
+**Tradeoff:** Until ReadingsService calls `evaluate`, GET returns `[]` even after a spike.
+
+---
+
 ## Explicitly not decided yet (do not pretend otherwise)
 
 These are on the target stack or were discussed, but **no implementation choice is locked** beyond “later”:
@@ -431,7 +451,7 @@ These are on the target stack or were discussed, but **no implementation choice 
 - Auth mechanism (JWT vs sessions vs API keys)
 - Users table and roles
 - Time-series store (Timescale) vs staying on row-per-reading in Postgres
-- Anomaly detection: rules vs ML vs LLM
+- Extra anomaly metrics/rules beyond `power_kw` (ML/LLM still later)
 - Redis client library and cache keys
 - Vector store for RAG
 - Which LLM API / LangGraph graph shape
@@ -466,3 +486,4 @@ These are on the target stack or were discussed, but **no implementation choice 
 | D016 | Reading belongs to Device; nested routes; metric+value |
 | D017 | Postman errors in Scripts (`sendRequest`), not extra requests |
 | D018 | Seven device types; metric+value per type; DTO IsIn later |
+| D019 | Anomalies GET + power_kw rules; evaluate not wired yet |
