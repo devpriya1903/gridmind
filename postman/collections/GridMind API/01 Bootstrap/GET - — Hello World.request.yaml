@@ -1,0 +1,15 @@
+$kind: http-request
+name: GET / — Hello World
+url: "{{baseUrl}}/"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status is 200', function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test('Body is Hello World!', function () {
+        pm.expect(pm.response.text()).to.eql('Hello World!');
+      });
+    language: text/javascript
+order: 1000

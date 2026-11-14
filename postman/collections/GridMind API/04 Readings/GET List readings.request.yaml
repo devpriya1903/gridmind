@@ -1,5 +1,5 @@
 $kind: http-request
-name: 'GET /devices/:deviceId/readings — List'
+name: GET /devices/:deviceId/readings — List
 description: |-
   ReadingsController.findAll → ReadingsService.findAllForDevice.
 
@@ -7,11 +7,11 @@ description: |-
   Expect **200** JSON array. Empty `[]` is valid.
   Missing-device **404** is asserted on POST Create reading's script.
 method: GET
-url: '{{baseUrl}}/devices/{{deviceId}}/readings'
+url: "{{baseUrl}}/devices/{{deviceId}}/readings"
+examples: .resources/GET List readings.resources/examples
 order: 1000
 scripts:
   - type: afterResponse
-    language: text/javascript
     code: |-
       pm.test('Status is 200', function () {
         pm.response.to.have.status(200);
@@ -19,3 +19,4 @@ scripts:
       pm.test('Body is a JSON array', function () {
         pm.expect(pm.response.json()).to.be.an('array');
       });
+    language: text/javascript

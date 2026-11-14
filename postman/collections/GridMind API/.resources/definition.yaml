@@ -1,5 +1,4 @@
 $kind: collection
-name: GridMind API
 description: |-
   Local NestJS API for GridMind. One folder per domain; one request file per
   HTTP route (plus a 409 example for unique device names).
@@ -15,9 +14,9 @@ description: |-
   Routes today:
   - Bootstrap: GET /, GET /test
   - Health: GET /health
-  - Devices: POST /devices, GET /devices
+  - Devices: POST /devices, GET /devices, GET /devices/:id
   - Readings: POST/GET /devices/:deviceId/readings
 variables:
   baseUrl: http://localhost:3000
   deviceName: Inverter-01
-  deviceId: ''
+  deviceId: ""

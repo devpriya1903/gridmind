@@ -1,0 +1,17 @@
+$kind: http-request
+name: GET /health — Postgres ping
+url: "{{baseUrl}}/health"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status is 200', function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test('Postgres reports up', function () {
+        const body = pm.response.json();
+        pm.expect(body.status).to.eql('ok');
+        pm.expect(body.info.postgres.status).to.eql('up');
+      });
+    language: text/javascript
+order: 1000

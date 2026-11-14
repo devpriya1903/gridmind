@@ -1,0 +1,20 @@
+$kind: http-example
+name: GET /devices — List
+request:
+  url: "{{baseUrl}}/devices"
+  method: GET
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    x-powered-by: Express
+    content-type: application/json; charset=utf-8
+    content-length: "549"
+    etag: W/"225-D+yFio0vtj37nXLog65P3uMQ/jc"
+    date: Sat, 14 Nov 2026 16:43:42 GMT
+    connection: keep-alive
+    keep-alive: timeout=5
+  body:
+    type: json
+    content: '[{"id":"5def4838-88b6-436f-a81b-ce9c8bd9f144","name":"Meter-1794574706","type":"meter","status":"offline","createdAt":"2026-11-13T12:58:26.594Z","updatedAt":"2026-11-13T12:58:26.594Z"},{"id":"291873f7-6909-4c4b-aace-8cdec8945fb4","name":"Inverter-02","type":"inverter","status":"offline","createdAt":"2026-11-13T11:05:24.330Z","updatedAt":"2026-11-13T11:05:24.330Z"},{"id":"227c01e7-1eea-435d-bc53-031d13d5ffea","name":"Inverter-01","type":"inverter","status":"offline","createdAt":"2026-11-06T12:21:16.365Z","updatedAt":"2026-11-06T12:21:16.365Z"}]'
+order: 1000

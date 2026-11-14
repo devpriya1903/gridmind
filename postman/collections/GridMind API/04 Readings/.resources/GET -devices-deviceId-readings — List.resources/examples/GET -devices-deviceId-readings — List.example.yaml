@@ -1,0 +1,20 @@
+$kind: http-example
+name: GET /devices/:deviceId/readings — List
+request:
+  url: "{{baseUrl}}/devices/{{deviceId}}/readings"
+  method: GET
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    x-powered-by: Express
+    content-type: application/json; charset=utf-8
+    content-length: "415"
+    etag: W/"19f-pitlLZmqGB3Bn6xobROXJ/ks/FM"
+    date: Sat, 14 Nov 2026 16:44:39 GMT
+    connection: keep-alive
+    keep-alive: timeout=5
+  body:
+    type: json
+    content: '[{"id":"cbc62b1c-1d36-4104-8d7e-b5f138ddc0fe","deviceId":"5def4838-88b6-436f-a81b-ce9c8bd9f144","metric":"power_kw","value":20,"recordedAt":"2026-11-14T12:40:02.300Z","createdAt":"2026-11-14T12:40:02.300Z"},{"id":"503687c6-67ad-45ce-958f-a07b4c61e8b1","deviceId":"5def4838-88b6-436f-a81b-ce9c8bd9f144","metric":"power_kw","value":12.5,"recordedAt":"2026-11-14T12:33:44.380Z","createdAt":"2026-11-14T12:33:44.380Z"}]'
+order: 1000

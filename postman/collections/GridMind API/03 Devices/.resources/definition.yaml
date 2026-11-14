@@ -1,5 +1,4 @@
 $kind: collection
-name: 03 Devices
 description: |-
   Device registry (Prisma `Device`). Needs Postgres + applied migrations.
 
@@ -10,4 +9,5 @@ description: |-
 
   Extra JSON keys → **400**. Duplicate `name` → **409**.
   List is newest `createdAt` first.
+  `GET /devices/:id` — one row; invalid uuid → **400**; missing → **404**.
 order: 3000

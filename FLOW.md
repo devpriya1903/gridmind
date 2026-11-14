@@ -2,7 +2,7 @@
 
 How control actually moves between **files that exist today**. Append when we add modules. Do **not** describe routes or services that are not in `src/` yet.
 
-Last updated: 2026-11-13 (readings belong to a device).
+Last updated: 2026-11-14 (`GET /devices/:id`).
 
 ---
 
@@ -17,9 +17,9 @@ Last updated: 2026-11-13 (readings belong to a device).
 | `src/prisma/prisma.module.ts` | Global module exporting `PrismaService` |
 | `src/prisma/prisma.service.ts` | Prisma client; `$connect` on module init |
 | `src/devices/devices.module.ts` | Registers devices controller + service |
-| `src/devices/devices.controller.ts` | `POST /devices`, `GET /devices` |
+| `src/devices/devices.controller.ts` | `POST /devices`, `GET /devices`, `GET /devices/:id` |
 | `src/devices/dto/create-device.dto.ts` | Validates/trims POST body |
-| `src/devices/devices.service.ts` | Prisma create/list; maps unique violations to 409 |
+| `src/devices/devices.service.ts` | Prisma create/list/findById; 409 unique name; 404 missing id |
 | `src/readings/readings.module.ts` | Registers readings controller + service |
 | `src/readings/readings.controller.ts` | `POST/GET /devices/:deviceId/readings` |
 | `src/readings/dto/create-reading.dto.ts` | Validates metric, value, optional recordedAt |
@@ -128,6 +128,29 @@ HTTP GET /devices
 
 ---
 
+## Request: `GET /devices/:id`
+
+Declared **after** `GET /devices` so Nest does not treat `"devices"` as an id. `ParseUUIDPipe` on `:id` → invalid uuid **400**.
+
+```
+HTTP GET /devices/:id
+        │
+        ▼
+  ParseUUIDPipe
+        ▼
+  DevicesController.findById(id)
+        ▼
+  DevicesService.findById
+        ├─ prisma.device.findUnique({ where: { id } })
+        │     missing → NotFoundException → HTTP 404
+        │               "Device {id} not found"
+        └─ found → 200 JSON of that Device row
+```
+
+Does **not** include readings. Those stay on `GET /devices/:deviceId/readings`.
+
+---
+
 ## Request: `POST /devices/:deviceId/readings`
 
 `ParseUUIDPipe` runs on `:deviceId` before the method. Invalid UUID → **400**.
@@ -187,6 +210,8 @@ Does not check Redis.
 | `DevicesService.create` | `src/devices/devices.service.ts` | controller | `prisma.device.create`; on P2002 → `ConflictException` |
 | `DevicesController.findAll` | `src/devices/devices.controller.ts` | `GET /devices` | `DevicesService.findAll` |
 | `DevicesService.findAll` | `src/devices/devices.service.ts` | controller | `prisma.device.findMany` |
+| `DevicesController.findById` | `src/devices/devices.controller.ts` | `GET /devices/:id` | `DevicesService.findById` |
+| `DevicesService.findById` | `src/devices/devices.service.ts` | controller | `device.findUnique`; missing → `NotFoundException` |
 | `ReadingsController.create` | `src/readings/readings.controller.ts` | `POST /devices/:deviceId/readings` | `ReadingsService.create` |
 | `ReadingsService.create` | `src/readings/readings.service.ts` | controller | `device.findUnique`; then `reading.create` |
 | `ReadingsController.findAll` | `src/readings/readings.controller.ts` | `GET /devices/:deviceId/readings` | `ReadingsService.findAllForDevice` |

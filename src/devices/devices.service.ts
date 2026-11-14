@@ -1,5 +1,5 @@
-import { ConflictException, Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { Device, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateDeviceDto } from './dto/create-device.dto';
 
@@ -23,9 +23,17 @@ export class DevicesService {
     }
   }
 
-  findAll() {
-    return this.prisma.device.findMany({
+  async findAll(): Promise<Device[]> {
+    return await this.prisma.device.findMany({
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  async findById(id: string): Promise<Device> {
+    const device = await this.prisma.device.findUnique({ where: { id } });
+    if (!device) {
+      throw new NotFoundException(`Device ${id} not found`);
+    }
+    return device;
   }
 }

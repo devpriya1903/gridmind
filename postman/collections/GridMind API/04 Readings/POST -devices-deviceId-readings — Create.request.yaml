@@ -1,29 +1,14 @@
 $kind: http-request
-name: 'POST /devices/:deviceId/readings — Create'
-description: |-
-  ReadingsController.create → ReadingsService.create.
-
-  Needs `deviceId` from POST Create device. Main Send is **201**.
-  The after-response script POSTs the same body to a UUID that is not
-  in Device and expects **404**. No separate missing-device request.
-
-  Reading `id` is this sample's PK; `deviceId` is the FK (they differ).
+name: POST /devices/:deviceId/readings — Create
+url: "{{baseUrl}}/devices/{{deviceId}}/readings"
 method: POST
-url: '{{baseUrl}}/devices/{{deviceId}}/readings'
-order: 2000
 headers:
-  - key: Content-Type
-    value: application/json
+  Content-Type: application/json
 body:
   type: json
-  content: |-
-    {
-      "metric": "power_kw",
-      "value": 12.5
-    }
+  content: ""
 scripts:
   - type: afterResponse
-    language: text/javascript
     code: |-
       const baseUrl = pm.variables.get('baseUrl');
       const missingId = '00000000-0000-4000-8000-000000000000';
@@ -58,3 +43,5 @@ scripts:
           },
         );
       }
+    language: text/javascript
+order: 2000
