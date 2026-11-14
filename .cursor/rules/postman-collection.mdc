@@ -16,12 +16,11 @@ Whenever you add, change, or remove an HTTP route in `src/**/*.controller.ts`, u
 ## How to update
 
 1. One **folder** per domain (`01 Bootstrap`, `02 Health`, `03 Devices`, …). New domain → new numbered folder + `.resources/definition.yaml`.
-2. One **`*.request.yaml`** per route. Name: `METHOD /path — short label`.
+2. One **`*.request.yaml` per happy-path route**. Name: `METHOD /path — short label`. Do **not** add extra requests whose only job is 409/404/400.
 3. Description: controller/service, request body/DTO, expected status and shape.
 4. Use `'{{baseUrl}}/…'` (quoted). POST/PATCH/PUT include JSON `body` matching the DTO.
-5. Light `afterResponse` tests for the happy-path status and payload.
-6. Document important error contracts that already exist in Nest (e.g. devices unique name → 409).
-7. Do not invent routes that are not in `src/` yet.
+5. `afterResponse` tests: happy-path status and payload, then `pm.sendRequest` for error contracts (duplicate name → 409, missing device → 404).
+6. Do not invent routes that are not in `src/` yet.
 
 ## Docs
 

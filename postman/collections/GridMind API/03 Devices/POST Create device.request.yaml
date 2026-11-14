@@ -3,12 +3,11 @@ name: 'POST /devices — Create'
 description: |-
   DevicesController.create → DevicesService.create.
 
-  `name` is set in a pre-request script (`deviceName` + timestamp) so Send
-  can be clicked repeatedly without hitting the unique-name **409**.
+  Pre-request sets a unique `deviceName` so the main Send is **201**.
+  The after-response script then POSTs the **same name again** and
+  expects **409** (Prisma P2002). No separate duplicate request.
 
   Optional `status` omitted → Prisma default `offline`.
-
-  Expect **201** JSON row: `id` (uuid), `name`, `type`, `status`, timestamps.
 method: POST
 url: '{{baseUrl}}/devices'
 order: 2000
@@ -30,13 +29,38 @@ scripts:
   - type: afterResponse
     language: text/javascript
     code: |-
+      const deviceName = pm.collectionVariables.get('deviceName');
+      const baseUrl = pm.variables.get('baseUrl');
+
       pm.test('Status is 201', function () {
         pm.response.to.have.status(201);
       });
       pm.test('Returns a device row', function () {
         const body = pm.response.json();
         pm.expect(body.id).to.be.a('string').and.not.empty;
-        pm.expect(body.name).to.eql(pm.collectionVariables.get('deviceName'));
+        pm.expect(body.name).to.eql(deviceName);
         pm.expect(body.type).to.eql('inverter');
         pm.expect(body.status).to.eql('offline');
+        pm.collectionVariables.set('deviceId', body.id);
       });
+
+      if (pm.response.code === 201) {
+        pm.sendRequest(
+          {
+            url: baseUrl + '/devices',
+            method: 'POST',
+            header: { 'Content-Type': 'application/json' },
+            body: {
+              mode: 'raw',
+              raw: JSON.stringify({ name: deviceName, type: 'inverter' }),
+            },
+          },
+          function (err, res) {
+            pm.test('Duplicate name returns 409', function () {
+              pm.expect(err).to.equal(null);
+              pm.expect(res.code).to.eql(409);
+              pm.expect(JSON.stringify(res.json())).to.include(deviceName);
+            });
+          },
+        );
+      }

@@ -49,7 +49,7 @@ Collection v3 YAML under `postman/` (Cursor / Postman Local View). Select enviro
 | What | Path |
 |---|---|
 | Collection | `postman/collections/GridMind API/` |
-| Folders | `01 Bootstrap`, `02 Health`, `03 Devices` |
+| Folders | `01 Bootstrap`, `02 Health`, `03 Devices`, `04 Readings` |
 | Environment | `postman/environments/Local.environment.yaml` (`baseUrl` = `http://localhost:3000`) |
 
 When a Nest route is added or changed, add or edit the matching `*.request.yaml` in the same turn (see `.cursor/rules/postman-collection.mdc`).
@@ -66,14 +66,16 @@ When a Nest route is added or changed, add or edit the matching `*.request.yaml`
 
 ## HTTP checks (current routes)
 
-Nest is up only after `npm run start:dev`. Postgres must be up for `/devices` and `/health`.
+Nest is up only after `npm run start:dev`. Postgres must be up for `/devices`, `/devices/:id/readings`, and `/health`.
 
 | Command | What it does | When / why |
 |---|---|---|
 | `curl -s http://localhost:3000/` | `GET /` → `Hello World!` | Confirm the process is serving HTTP. |
 | `curl -s http://localhost:3000/health` | `GET /health` → Postgres ping | Confirm Nest can reach Postgres. |
 | `curl -s http://localhost:3000/devices` | `GET /devices` → JSON array | List devices. |
-| `curl -s -X POST http://localhost:3000/devices -H 'Content-Type: application/json' -d '{"name":"Inverter-01","type":"inverter"}'` | `POST /devices` | Create a device. Second POST with the **same name** must be **409 Conflict**. |
+| `curl -s -X POST http://localhost:3000/devices -H 'Content-Type: application/json' -d '{"name":"Inverter-01","type":"inverter"}'` | `POST /devices` | Create a device. Second POST with the **same name** must be **409 Conflict**. Copy the returned `id` as `DEVICE_ID`. |
+| `curl -s -X POST http://localhost:3000/devices/$DEVICE_ID/readings -H 'Content-Type: application/json' -d '{"metric":"power_kw","value":12.5}'` | Stores a telemetry row | Device must exist. Unknown uuid → **404**. |
+| `curl -s http://localhost:3000/devices/$DEVICE_ID/readings` | Lists readings for that device | Newest `recordedAt` first. |
 
 ---
 
@@ -100,7 +102,7 @@ Requires Compose Postgres up and `.env` `DATABASE_URL`. Schema: `prisma/schema.p
 
 | Command | What it does | When / why |
 |---|---|---|
-| `npx prisma migrate dev --name <slug>` | Creates SQL under `prisma/migrations/`, applies it to local Postgres, regenerates the client | After you change `schema.prisma` (new model/field). Already used: `--name init_devices`, `--name unique_device_name`. Prefer this over `db push`. Run via **this repo’s** Prisma 6 (`npm install` first). Bare `npx prisma` in a sandbox can download Prisma 8 by mistake. |
+| `npx prisma migrate dev --name <slug>` | Creates SQL under `prisma/migrations/`, applies it to local Postgres, regenerates the client | After you change `schema.prisma` (new model/field). Already used: `--name init_devices`, `--name unique_device_name`, `--name init_readings`. Prefer this over `db push`. Run via **this repo’s** Prisma 6 (`npm install` first). Bare `npx prisma` in a sandbox can download Prisma 8 by mistake. |
 | `npx prisma migrate deploy` | Applies **existing** migration files; does not create a new one | After `git pull`, or when the SQL is already in `prisma/migrations/` (e.g. unique name). |
 | `npx prisma migrate status` | Shows whether local DB matches migration history | Debugging “table does not exist” / pending unique index. |
 | `npx prisma migrate resolve --rolled-back <migration_name>` | Marks a failed migration as rolled back so it can be retried | After `migrate deploy` fails (example: unique index blocked by duplicate `Inverter-01` rows). Fix the data, then `migrate deploy` again. |
@@ -116,31 +118,17 @@ Requires Compose Postgres up and `.env` `DATABASE_URL`. Schema: `prisma/schema.p
 
 ---
 
-## Nest generators
+## Nest generators (pattern only — do not log every domain)
 
-Use after `npm install`. Creates files and usually registers them in `app.module.ts`.
+Use after `npm install`. Replace `<name>` (`devices`, `health`, `readings`, …). `--no-spec` skips a generated test file. Short form: `npx nest g module <name>`.
 
-**Exact commands used in this repo**
-
-| Command | What it does | When / why |
-|---|---|---|
-| `npx nest generate module prisma` | Creates `src/prisma/prisma.module.ts` | Once: Nest module that owns `PrismaService`. |
-| `npx nest generate service prisma --no-spec` | Creates `src/prisma/prisma.service.ts` | Once: injectable Prisma client wrapper. `--no-spec` skips a generated test file until we write tests on purpose. |
-| `npx nest generate module devices` | Creates `src/devices/devices.module.ts` | Once: devices domain module. |
-| `npx nest generate controller devices --no-spec` | Creates `src/devices/devices.controller.ts` | `POST /devices` and `GET /devices`. |
-| `npx nest generate service devices --no-spec` | Creates `src/devices/devices.service.ts` | Prisma create/list (and unique-name 409). |
-| `npx nest generate module health` | Creates `src/health/health.module.ts` | Once: health module. |
-| `npx nest generate controller health --no-spec` | Creates `src/health/health.controller.ts` | `GET /health`. |
-
-**Pattern for later domains** (replace the name; still document the exact line here when we run it)
+Do **not** add a new row here each time we scaffold a module. The pattern is enough.
 
 | Command | What it does | When / why |
 |---|---|---|
-| `npx nest generate module <name>` | Creates `src/<name>/<name>.module.ts` | New domain (e.g. devices, health). |
-| `npx nest generate controller <name> --no-spec` | Creates a controller | HTTP routes for that domain. |
+| `npx nest generate module <name>` | Creates `src/<name>/<name>.module.ts` (often registers it on `AppModule`) | New domain folder. |
+| `npx nest generate controller <name> --no-spec` | Creates a controller | HTTP routes. Edit `@Controller(...)` if the path is nested (e.g. `devices/:deviceId/readings`). |
 | `npx nest generate service <name> --no-spec` | Creates an injectable service | Business logic / Prisma calls. |
-
-Short form: `npx nest g module prisma` is the same as `npx nest generate module prisma`.
 
 ---
 

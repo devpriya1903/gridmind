@@ -8,7 +8,7 @@ Each entry answers: **what we chose, why, what we gave up, and what we explicitl
 
 ## How to add an entry
 
-1. Next number (`D016`, …).
+1. Next number (`D018`, …).
 2. Date (the day the choice was made).
 3. Status: `accepted` | `superseded by Dxxx` | `deferred`.
 4. Context, decision, reasons, tradeoff, alternatives.
@@ -248,7 +248,7 @@ Interview use: this file is the “why” behind the repo, not a tutorial.
 
 **Tradeoff:** The API is briefly unauthenticated. Acceptable on localhost; must not ship that way.
 
-**Progress (2026-11-06):** `POST /devices` and `GET /devices` work. Device **name** is unique (D013). Readings still next.
+**Progress (2026-11-13):** Devices + readings (D016). Auth still later.
 
 ---
 
@@ -340,13 +340,54 @@ Interview use: this file is the “why” behind the repo, not a tutorial.
 
 ---
 
+## D016 — Reading belongs to Device (one row per telemetry sample)
+
+- **Date:** 2026-11-13
+- **Status:** accepted
+
+**Context:** D011 said the API stays a skeleton until we can create a device **and** store a reading. Need a relational shape the AI tools can query later (device → its samples).
+
+**Decision:**
+
+- Prisma model `Reading`: `id`, `deviceId` (FK → `Device.id`, **onDelete: Cascade**), `metric` (string), `value` (float), `recordedAt` (when the meter saw it, default now), `createdAt` (when we stored it). Index `(deviceId, recordedAt)`.
+- HTTP nested under the parent: `POST/GET /devices/:deviceId/readings` (`ReadingsModule`). Invalid UUID → 400. Missing device → **404**.
+- One **row per sample**, not a time-series engine (Timescale, ADX). `metric` is a free trimmed string (`power_kw`, `voltage_v`, …) so inverters and meters can share one table.
+- `recordedAt` optional on POST so delayed ingest is possible.
+
+**Why nested routes:** the URL states the invariant (a reading always has a device). A top-level `POST /readings` would invite orphan rows in the API even if the FK exists.
+
+**Why not wide columns (`voltage`, `current`, `kwh` on one row):** devices do not all share the same sensors; sparse nulls would pile up. Metric+value stays one table until we have a real catalog.
+
+**Tradeoff:** listing “latest snapshot of every metric” needs a query, not a single row. Accepted for v1.
+
+**Alternatives:** Timescale hypertables; separate tables per device type; JSON `payload` column (harder to index and to explain in interviews).
+
+---
+
+## D017 — Postman: one request per route; 409/404 in the same script
+
+- **Date:** 2026-11-14
+- **Status:** accepted
+
+**Context:** Duplicate Postman requests existed only to hit unique-name **409** and missing-device **404**. Those can be sent from the Tests tab of the happy-path request.
+
+**Decision:** Keep one `*.request.yaml` per Nest route. After a successful Send, `pm.sendRequest` asserts the error contract (duplicate `name` → 409; unknown `deviceId` → 404). Do not add extra requests whose only job is a status code.
+
+**Why:** The collection stays a map of the API, not a list of every failure mode. Collection Run still covers 409/404 without a second click.
+
+**Tradeoff:** Tests are a bit harder to read than a dedicated request. Accepted.
+
+**Alternatives:** Extra 409/404 requests (removed); Newman/Postman CLI in CI later.
+
+---
+
 ## Explicitly not decided yet (do not pretend otherwise)
 
 These are on the target stack or were discussed, but **no implementation choice is locked** beyond “later”:
 
 - Auth mechanism (JWT vs sessions vs API keys)
 - Users table and roles
-- Telemetry / readings schema details (columns, time-series vs row-per-reading)
+- Time-series store (Timescale) vs staying on row-per-reading in Postgres
 - Anomaly detection: rules vs ML vs LLM
 - Redis client library and cache keys
 - Vector store for RAG
@@ -379,3 +420,5 @@ These are on the target stack or were discussed, but **no implementation choice 
 | D013 | Unique device `name`; POST duplicate → 409 |
 | D014 | Postman Collection v3 YAML; folders by domain |
 | D015 | GitHub Actions CI; auto-delete branches; e2e later |
+| D016 | Reading belongs to Device; nested routes; metric+value |
+| D017 | Postman errors in Scripts (`sendRequest`), not extra requests |

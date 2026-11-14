@@ -1,0 +1,18 @@
+$kind: collection
+name: 04 Readings
+description: |-
+  Telemetry rows (Prisma `Reading`) nested under a device.
+
+  Routes: POST/GET `/devices/:deviceId/readings`
+
+  POST body (CreateReadingDto):
+  - `metric` (string, required, trimmed) e.g. `power_kw`
+  - `value` (number, required)
+  - `recordedAt` (optional ISO-8601; default now)
+
+  Unknown `deviceId` → **404**. Invalid UUID → **400**. Extra JSON keys → **400**.
+  List is newest `recordedAt` first.
+
+  Set `deviceId` by sending **POST /devices — Create** first, or paste a uuid
+  into the collection variable.
+order: 4000
