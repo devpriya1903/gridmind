@@ -10,13 +10,15 @@ export class CreateDeviceDto {
   name: string;
 
   @IsString()
-  @IsIn(['smart_meter',
+  @IsIn([
+    'smart_meter',
     'smart_breaker',
     'ev_charger',
     'hvac',
     'solar_inverter',
     'battery',
-    'smart_plug'])
+    'smart_plug',
+  ])
   type: string;
 
   @IsOptional()
