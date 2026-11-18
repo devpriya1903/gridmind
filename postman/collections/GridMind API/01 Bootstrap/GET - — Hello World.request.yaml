@@ -1,16 +1,9 @@
 $kind: http-request
-name: 'GET / — Hello World'
-description: |-
-  AppController.getHello → AppService.getHello.
-
-  Expect: **200** body `Hello World!` (plain text, not JSON).
-  Does not need Postgres.
+name: GET / — Hello World
+url: "{{baseUrl}}/"
 method: GET
-url: '{{baseUrl}}/'
-order: 1000
 scripts:
   - type: afterResponse
-    language: text/javascript
     code: |-
       pm.test('Status is 200', function () {
         pm.response.to.have.status(200);
@@ -18,3 +11,5 @@ scripts:
       pm.test('Body is Hello World!', function () {
         pm.expect(pm.response.text()).to.eql('Hello World!');
       });
+    language: text/javascript
+order: 1000

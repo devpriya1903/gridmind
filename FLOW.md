@@ -2,7 +2,7 @@
 
 How control actually moves between **files that exist today**. Append when we add modules. Do **not** describe routes or services that are not in `src/` yet.
 
-Last updated: 2026-11-13 (readings belong to a device).
+Last updated: 2026-11-14 (`GET /devices/:deviceId/anomalies`).
 
 ---
 
@@ -12,18 +12,21 @@ Last updated: 2026-11-13 (readings belong to a device).
 |---|---|
 | `package.json` | Scripts that start Node (`start:dev`, `start`) |
 | `src/main.ts` | **Process entry point** — ValidationPipe, then listen |
-| `src/app.module.ts` | Root module — Config, Observe, Prisma, Devices, Readings, Health |
+| `src/app.module.ts` | Root module — Config, Observe, Prisma, Devices, Readings, Health, Anomalies |
 | `src/app.controller.ts` / `src/app.service.ts` | `GET /` and `GET /test` |
 | `src/prisma/prisma.module.ts` | Global module exporting `PrismaService` |
 | `src/prisma/prisma.service.ts` | Prisma client; `$connect` on module init |
 | `src/devices/devices.module.ts` | Registers devices controller + service |
-| `src/devices/devices.controller.ts` | `POST /devices`, `GET /devices` |
+| `src/devices/devices.controller.ts` | `POST /devices`, `GET /devices`, `GET /devices/:id` |
 | `src/devices/dto/create-device.dto.ts` | Validates/trims POST body |
-| `src/devices/devices.service.ts` | Prisma create/list; maps unique violations to 409 |
+| `src/devices/devices.service.ts` | Prisma create/list/findById; 409 unique name; 404 missing id |
 | `src/readings/readings.module.ts` | Registers readings controller + service |
 | `src/readings/readings.controller.ts` | `POST/GET /devices/:deviceId/readings` |
 | `src/readings/dto/create-reading.dto.ts` | Validates metric, value, optional recordedAt |
 | `src/readings/readings.service.ts` | 404 if device missing; Prisma create/list readings |
+| `src/anomalies/anomalies.module.ts` | Registers anomalies controller + service |
+| `src/anomalies/anomalies.controller.ts` | `GET /devices/:deviceId/anomalies` |
+| `src/anomalies/anomalies.service.ts` | `evaluate` (power_kw thresholds); list by device |
 | `src/health/health.module.ts` | Terminus + health controller |
 | `src/health/health.controller.ts` | `GET /health` pings Postgres |
 
@@ -56,6 +59,7 @@ npm run start:dev
         │  PrismaModule (global) → constructs PrismaService → onModuleInit → $connect
         │  DevicesModule → DevicesService, DevicesController
         │  ReadingsModule → ReadingsService, ReadingsController
+        │  AnomaliesModule → AnomaliesService, AnomaliesController
         │  HealthModule → HealthController
         │  AppController / AppService
         ▼
@@ -128,6 +132,29 @@ HTTP GET /devices
 
 ---
 
+## Request: `GET /devices/:id`
+
+Declared **after** `GET /devices` so Nest does not treat `"devices"` as an id. `ParseUUIDPipe` on `:id` → invalid uuid **400**.
+
+```
+HTTP GET /devices/:id
+        │
+        ▼
+  ParseUUIDPipe
+        ▼
+  DevicesController.findById(id)
+        ▼
+  DevicesService.findById
+        ├─ prisma.device.findUnique({ where: { id } })
+        │     missing → NotFoundException → HTTP 404
+        │               "Device {id} not found"
+        └─ found → 200 JSON of that Device row
+```
+
+Does **not** include readings. Those stay on `GET /devices/:deviceId/readings`.
+
+---
+
 ## Request: `POST /devices/:deviceId/readings`
 
 `ParseUUIDPipe` runs on `:deviceId` before the method. Invalid UUID → **400**.
@@ -165,6 +192,25 @@ HTTP GET /devices/:deviceId/readings
 
 ---
 
+## Request: `GET /devices/:deviceId/anomalies`
+
+```
+HTTP GET /devices/:deviceId/anomalies
+        │
+        ▼
+  ParseUUIDPipe
+        ▼
+  AnomaliesController.findAllForDevice
+        ▼
+  AnomaliesService.findAllForDevice
+        ├─ prisma.device.findUnique → missing → 404
+        └─ prisma.anomaly.findMany({ where: { reading: { deviceId } }, orderBy: createdAt desc })
+```
+
+`AnomaliesService.evaluate` exists (power_kw > 100 critical, > 50 warning) but **nothing calls it yet**. `ReadingsService.create` only inserts a reading. POST a spike and GET anomalies can still be `[]`.
+
+---
+
 ## Request: `GET /health`
 
 ```
@@ -187,10 +233,15 @@ Does not check Redis.
 | `DevicesService.create` | `src/devices/devices.service.ts` | controller | `prisma.device.create`; on P2002 → `ConflictException` |
 | `DevicesController.findAll` | `src/devices/devices.controller.ts` | `GET /devices` | `DevicesService.findAll` |
 | `DevicesService.findAll` | `src/devices/devices.service.ts` | controller | `prisma.device.findMany` |
+| `DevicesController.findById` | `src/devices/devices.controller.ts` | `GET /devices/:id` | `DevicesService.findById` |
+| `DevicesService.findById` | `src/devices/devices.service.ts` | controller | `device.findUnique`; missing → `NotFoundException` |
 | `ReadingsController.create` | `src/readings/readings.controller.ts` | `POST /devices/:deviceId/readings` | `ReadingsService.create` |
 | `ReadingsService.create` | `src/readings/readings.service.ts` | controller | `device.findUnique`; then `reading.create` |
 | `ReadingsController.findAll` | `src/readings/readings.controller.ts` | `GET /devices/:deviceId/readings` | `ReadingsService.findAllForDevice` |
 | `ReadingsService.findAllForDevice` | `src/readings/readings.service.ts` | controller | `device.findUnique`; then `reading.findMany` |
+| `AnomaliesController.findAllForDevice` | `src/anomalies/anomalies.controller.ts` | `GET /devices/:deviceId/anomalies` | `AnomaliesService.findAllForDevice` |
+| `AnomaliesService.findAllForDevice` | `src/anomalies/anomalies.service.ts` | controller | `device.findUnique`; then `anomaly.findMany` via reading.deviceId |
+| `AnomaliesService.evaluate` | `src/anomalies/anomalies.service.ts` | **not called yet** | `anomaly.create` if power_kw exceeds 50/100 |
 | `HealthController.check` | `src/health/health.controller.ts` | `GET /health` | Terminus `pingCheck` |
 
 ---

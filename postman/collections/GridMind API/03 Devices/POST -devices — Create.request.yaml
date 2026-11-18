@@ -1,5 +1,5 @@
 $kind: http-request
-name: 'POST /devices — Create'
+name: POST /devices — Create
 description: |-
   DevicesController.create → DevicesService.create.
 
@@ -9,11 +9,11 @@ description: |-
 
   Optional `status` omitted → Prisma default `offline`.
 method: POST
-url: '{{baseUrl}}/devices'
+url: "{{baseUrl}}/devices"
+examples: .resources/POST Create device.resources/examples
 order: 2000
 headers:
-  - key: Content-Type
-    value: application/json
+  Content-Type: application/json
 body:
   type: json
   content: |-
@@ -23,11 +23,9 @@ body:
     }
 scripts:
   - type: beforeRequest
+    code: pm.collectionVariables.set('deviceName', 'Inverter-' + Date.now());
     language: text/javascript
-    code: |-
-      pm.collectionVariables.set('deviceName', 'Inverter-' + Date.now());
   - type: afterResponse
-    language: text/javascript
     code: |-
       const deviceName = pm.collectionVariables.get('deviceName');
       const baseUrl = pm.variables.get('baseUrl');
@@ -64,3 +62,4 @@ scripts:
           },
         );
       }
+    language: text/javascript

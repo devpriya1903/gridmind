@@ -1,5 +1,4 @@
 $kind: collection
-name: 03 Devices
 description: |-
   Device registry (Prisma `Device`). Needs Postgres + applied migrations.
 

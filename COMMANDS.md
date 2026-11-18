@@ -49,7 +49,7 @@ Collection v3 YAML under `postman/` (Cursor / Postman Local View). Select enviro
 | What | Path |
 |---|---|
 | Collection | `postman/collections/GridMind API/` |
-| Folders | `01 Bootstrap`, `02 Health`, `03 Devices`, `04 Readings` |
+| Folders | `01 Bootstrap`, `02 Health`, `03 Devices`, `04 Readings`, `05 Anomalies` |
 | Environment | `postman/environments/Local.environment.yaml` (`baseUrl` = `http://localhost:3000`) |
 
 When a Nest route is added or changed, add or edit the matching `*.request.yaml` in the same turn (see `.cursor/rules/postman-collection.mdc`).
@@ -66,16 +66,18 @@ When a Nest route is added or changed, add or edit the matching `*.request.yaml`
 
 ## HTTP checks (current routes)
 
-Nest is up only after `npm run start:dev`. Postgres must be up for `/devices`, `/devices/:id/readings`, and `/health`.
+Nest is up only after `npm run start:dev`. Postgres must be up for `/devices`, readings, anomalies, and `/health`.
 
 | Command | What it does | When / why |
 |---|---|---|
 | `curl -s http://localhost:3000/` | `GET /` → `Hello World!` | Confirm the process is serving HTTP. |
 | `curl -s http://localhost:3000/health` | `GET /health` → Postgres ping | Confirm Nest can reach Postgres. |
 | `curl -s http://localhost:3000/devices` | `GET /devices` → JSON array | List devices. |
+| `curl -s http://localhost:3000/devices/$DEVICE_ID` | `GET /devices/:id` → one device | Needs a uuid from create/list. Unknown uuid → **404**. Non-uuid → **400**. |
 | `curl -s -X POST http://localhost:3000/devices -H 'Content-Type: application/json' -d '{"name":"Inverter-01","type":"inverter"}'` | `POST /devices` | Create a device. Second POST with the **same name** must be **409 Conflict**. Copy the returned `id` as `DEVICE_ID`. |
 | `curl -s -X POST http://localhost:3000/devices/$DEVICE_ID/readings -H 'Content-Type: application/json' -d '{"metric":"power_kw","value":12.5}'` | Stores a telemetry row | Device must exist. Unknown uuid → **404**. |
 | `curl -s http://localhost:3000/devices/$DEVICE_ID/readings` | Lists readings for that device | Newest `recordedAt` first. |
+| `curl -s http://localhost:3000/devices/$DEVICE_ID/anomalies` | Lists anomalies for that device | Newest `createdAt` first. Empty until `evaluate` runs after a reading. Unknown uuid → **404**. |
 
 ---
 

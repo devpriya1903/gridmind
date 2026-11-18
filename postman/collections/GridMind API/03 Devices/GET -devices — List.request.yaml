@@ -1,15 +1,13 @@
 $kind: http-request
-name: 'GET /devices — List'
+name: GET /devices — List
 description: |-
-  DevicesController.findAll → prisma.device.findMany ordered by createdAt desc.
+  DevicesController.findAll → DevicesService.findAll.
 
-  Expect **200** JSON array. Empty `[]` is valid when no rows exist.
+  Expect **200** array, newest `createdAt` first.
+url: "{{baseUrl}}/devices"
 method: GET
-url: '{{baseUrl}}/devices'
-order: 1000
 scripts:
   - type: afterResponse
-    language: text/javascript
     code: |-
       pm.test('Status is 200', function () {
         pm.response.to.have.status(200);
@@ -18,3 +16,6 @@ scripts:
         const body = pm.response.json();
         pm.expect(body).to.be.an('array');
       });
+    language: text/javascript
+examples: ./.resources/GET -devices — List.resources/examples
+order: 1000

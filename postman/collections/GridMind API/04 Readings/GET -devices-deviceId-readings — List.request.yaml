@@ -1,0 +1,40 @@
+$kind: http-request
+name: GET /devices/:deviceId/readings — List
+description: |-
+  ReadingsController.findAll → ReadingsService.findAllForDevice.
+
+  Needs `deviceId` from POST Create device.
+  Expect **200** array, newest `recordedAt` first.
+  Missing device → **404** (asserted via sendRequest).
+method: GET
+url: "{{baseUrl}}/devices/{{deviceId}}/readings"
+scripts:
+  - type: afterResponse
+    code: |-
+      const baseUrl = pm.variables.get('baseUrl');
+      const missingId = '00000000-0000-4000-8000-000000000000';
+
+      pm.test('Status is 200', function () {
+        pm.response.to.have.status(200);
+      });
+      pm.test('Body is a JSON array', function () {
+        pm.expect(pm.response.json()).to.be.an('array');
+      });
+
+      if (pm.response.code === 200) {
+        pm.sendRequest(
+          {
+            url: baseUrl + '/devices/' + missingId + '/readings',
+            method: 'GET',
+          },
+          function (err, res) {
+            pm.test('Missing device returns 404', function () {
+              pm.expect(err).to.equal(null);
+              pm.expect(res.code).to.eql(404);
+            });
+          },
+        );
+      }
+    language: text/javascript
+examples: ./.resources/GET -devices-deviceId-readings — List.resources/examples
+order: 1000

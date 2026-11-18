@@ -1,0 +1,34 @@
+$kind: http-example
+name: GET /devices/:deviceId/anomalies — List
+description: |-
+  AnomaliesController.findAllForDevice → AnomaliesService.findAllForDevice.
+
+  Needs `deviceId` from POST Create device.
+  Expect **200** array (may be empty if no `power_kw` reading exceeded 50).
+  Missing device → **404** (asserted via sendRequest).
+request:
+  url: "{{baseUrl}}/devices/{{deviceId}}/anomalies"
+  method: GET
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    x-powered-by: Express
+    content-type: application/json; charset=utf-8
+    content-length: "831"
+    etag: W/"33f-DvyghG8/MDNStcXmUXubLFUpk1g"
+    date: Sat, 14 Nov 2026 18:15:04 GMT
+    connection: keep-alive
+    keep-alive: timeout=5
+  body:
+    type: json
+    content: '[{"id":"bdcf1481-0774-4721-8a82-5e71a5df067d","readingId":"5bc2faa2-ed94-4863-a095-75131315e58d","severity":"warning","reason":"power_kw
+      59.5 exceeded
+      threshold","createdAt":"2026-11-14T18:15:01.491Z"},{"id":"469b9746-5d1a-4da3-adf0-d08e311b602a","readingId":"f0cefdb5-2e37-46eb-9bbb-342a7a86559a","severity":"critical","reason":"power_kw
+      129.5 exceeded
+      threshold","createdAt":"2026-11-14T18:14:48.493Z"},{"id":"6c73ef5a-b2ff-47b9-b279-cc907aeb2665","readingId":"17bdd2c2-52db-41b0-9675-e022103f892d","severity":"critical","reason":"power_kw
+      129.5 exceeded threshold
+      critical","createdAt":"2026-11-14T18:13:57.433Z"},{"id":"de5e78d3-b6c7-4640-99d3-1d2543772eea","readingId":"90a3da47-576a-428a-a22b-f03b4f316b15","severity":"critical","reason":"power_kw
+      ${reading.value} exceeded
+      threshold","createdAt":"2026-11-14T18:11:42.199Z"}]'
+order: 1794680106566

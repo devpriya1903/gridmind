@@ -1,4 +1,11 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+} from '@nestjs/common';
 import { DevicesService } from './devices.service';
 import { CreateDeviceDto } from './dto/create-device.dto';
 
@@ -14,5 +21,10 @@ export class DevicesController {
   @Get()
   findAll() {
     return this.devicesService.findAll();
+  }
+
+  @Get(':id')
+  findById(@Param('id', ParseUUIDPipe) id: string) {
+    return this.devicesService.findById(id);
   }
 }

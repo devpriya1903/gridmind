@@ -1,0 +1,23 @@
+$kind: collection
+description: >-
+  Flags on readings (Prisma `Anomaly`) nested under a device.
+
+
+  Route: GET `/devices/:deviceId/anomalies`
+
+
+  No public POST. Rows are created when `ReadingsService.create` calls
+  `AnomaliesService.evaluate` after inserting a reading.
+
+
+  v1 rules (`power_kw` only): value > 100 → `critical`; value > 50 →
+  `warning`; otherwise no row.
+
+
+  Unknown `deviceId` → **404**. Invalid UUID → **400**. List is newest
+  `createdAt` first.
+
+
+  Set `deviceId` by sending **POST /devices — Create** first. To see a
+  non-empty list, POST a reading with `value` 80 or 120, then GET here.
+order: 5000
