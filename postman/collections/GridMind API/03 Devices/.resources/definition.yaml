@@ -4,9 +4,10 @@ description: |-
 
   POST body (CreateDeviceDto):
   - `name` (string, required, trimmed) — unique in the database
-  - `type` (string, required)
+  - `type` (required slug): `smart_meter` | `smart_breaker` | `ev_charger` |
+    `hvac` | `solar_inverter` | `battery` | `smart_plug`
   - `status` (optional: `online` | `offline` | `fault`; default `offline`)
 
-  Extra JSON keys → **400**. Duplicate `name` → **409**.
-  List is newest `createdAt` first.
+  Extra JSON keys → **400**. Unknown `type` (e.g. `inverter`) → **400**.
+  Duplicate `name` → **409**. List is newest `createdAt` first.
 order: 3000

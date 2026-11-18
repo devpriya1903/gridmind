@@ -3,11 +3,12 @@ name: POST /devices — Create
 description: |-
   DevicesController.create → DevicesService.create.
 
-  Pre-request sets a unique `deviceName` so the main Send is **201**.
-  The after-response script then POSTs the **same name again** and
-  expects **409** (Prisma P2002). No separate duplicate request.
+  `type` must be one of: smart_meter, smart_breaker, ev_charger, hvac,
+  solar_inverter, battery, smart_plug (CreateDeviceDto @IsIn). Unknown
+  type → **400**. Duplicate `name` → **409**.
 
-  Optional `status` omitted → Prisma default `offline`.
+  Pre-request sets a unique `deviceName`. After 201, scripts POST the
+  same name again (409) and POST type `inverter` (400). No extra requests.
 method: POST
 url: "{{baseUrl}}/devices"
 examples: .resources/POST Create device.resources/examples
@@ -19,7 +20,7 @@ body:
   content: |-
     {
       "name": "{{deviceName}}",
-      "type": "inverter"
+      "type": "smart_meter"
     }
 scripts:
   - type: beforeRequest
@@ -37,7 +38,7 @@ scripts:
         const body = pm.response.json();
         pm.expect(body.id).to.be.a('string').and.not.empty;
         pm.expect(body.name).to.eql(deviceName);
-        pm.expect(body.type).to.eql('inverter');
+        pm.expect(body.type).to.eql('smart_meter');
         pm.expect(body.status).to.eql('offline');
         pm.collectionVariables.set('deviceId', body.id);
       });
@@ -50,7 +51,7 @@ scripts:
             header: { 'Content-Type': 'application/json' },
             body: {
               mode: 'raw',
-              raw: JSON.stringify({ name: deviceName, type: 'inverter' }),
+              raw: JSON.stringify({ name: deviceName, type: 'smart_meter' }),
             },
           },
           function (err, res) {
@@ -58,6 +59,27 @@ scripts:
               pm.expect(err).to.equal(null);
               pm.expect(res.code).to.eql(409);
               pm.expect(JSON.stringify(res.json())).to.include(deviceName);
+            });
+          },
+        );
+
+        pm.sendRequest(
+          {
+            url: baseUrl + '/devices',
+            method: 'POST',
+            header: { 'Content-Type': 'application/json' },
+            body: {
+              mode: 'raw',
+              raw: JSON.stringify({
+                name: 'Bad-Type-' + Date.now(),
+                type: 'inverter',
+              }),
+            },
+          },
+          function (err, res) {
+            pm.test('Unknown type inverter returns 400', function () {
+              pm.expect(err).to.equal(null);
+              pm.expect(res.code).to.eql(400);
             });
           },
         );

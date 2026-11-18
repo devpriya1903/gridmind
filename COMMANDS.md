@@ -74,7 +74,7 @@ Nest is up only after `npm run start:dev`. Postgres must be up for `/devices`, r
 | `curl -s http://localhost:3000/health` | `GET /health` → Postgres ping | Confirm Nest can reach Postgres. |
 | `curl -s http://localhost:3000/devices` | `GET /devices` → JSON array | List devices. |
 | `curl -s http://localhost:3000/devices/$DEVICE_ID` | `GET /devices/:id` → one device | Needs a uuid from create/list. Unknown uuid → **404**. Non-uuid → **400**. |
-| `curl -s -X POST http://localhost:3000/devices -H 'Content-Type: application/json' -d '{"name":"Inverter-01","type":"inverter"}'` | `POST /devices` | Create a device. Second POST with the **same name** must be **409 Conflict**. Copy the returned `id` as `DEVICE_ID`. |
+| `curl -s -X POST http://localhost:3000/devices -H 'Content-Type: application/json' -d '{"name":"Meter-A","type":"smart_meter"}'` | `POST /devices` | `type` must be one of the seven slugs (D018). Unknown type (e.g. `inverter`) → **400**. Duplicate `name` → **409**. Copy `id` as `DEVICE_ID`. |
 | `curl -s -X POST http://localhost:3000/devices/$DEVICE_ID/readings -H 'Content-Type: application/json' -d '{"metric":"power_kw","value":12.5}'` | Stores a telemetry row | Device must exist. Unknown uuid → **404**. |
 | `curl -s http://localhost:3000/devices/$DEVICE_ID/readings` | Lists readings for that device | Newest `recordedAt` first. |
 | `curl -s http://localhost:3000/devices/$DEVICE_ID/anomalies` | Lists anomalies for that device | After a `power_kw` reading **> 50**. Empty for 12.5. Unknown uuid → **404**. |

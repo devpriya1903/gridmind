@@ -384,7 +384,7 @@ Interview use: this file is the “why” behind the repo, not a tutorial.
 ## D018 — Simulated device catalog (seven types, one `Device.type` string)
 
 - **Date:** 2026-11-14
-- **Status:** accepted (catalog locked; DTO `IsIn` and simulator not coded yet)
+- **Status:** accepted (`CreateDeviceDto` `@IsIn` live; simulator not coded yet)
 
 **Context:** The architecture needs a device simulator (50–500 units). Each simulated unit should be a recognizable home/energy asset, not a generic `inverter`. `Device.type` is already a required string with no catalog.
 
@@ -418,7 +418,9 @@ When we tighten `CreateDeviceDto`, `@IsIn` this slug list (400 on unknown type).
 
 **Why one table:** Nest modules and agent tools stay `getUsage(deviceId)` regardless of HVAC vs charger. Per-type tables would explode modules.
 
-**Tradeoff:** Invalid types can still be inserted until the DTO `IsIn` lands. Accepted so anomalies stay the current Nest slice.
+**Tradeoff:** Existing rows with `type: inverter` remain until deleted; new POSTs cannot use that slug.
+
+**Progress (2026-11-18):** `@IsIn` is on `CreateDeviceDto`. Postman Create uses `smart_meter` and asserts 400 for `inverter`. Simulator still later.
 
 **Alternatives:** Prisma enum (migration every new type); subclass tables per device.
 
