@@ -5,6 +5,6 @@ import { AnomaliesController } from './anomalies.controller';
 @Module({
   providers: [AnomaliesService],
   controllers: [AnomaliesController],
-  exports: [AnomaliesService]
+  exports: [AnomaliesService],
 })
 export class AnomaliesModule {}

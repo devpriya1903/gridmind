@@ -4,11 +4,12 @@ import { Anomaly } from '@prisma/client';
 
 @Controller('devices')
 export class AnomaliesController {
-    constructor(private readonly anomaliesService: AnomaliesService) {}
+  constructor(private readonly anomaliesService: AnomaliesService) {}
 
-    @Get(':deviceId/anomalies')
-    async findAllForDevice(@Param('deviceId', ParseUUIDPipe) deviceId: string): Promise<Anomaly[]> {
-        return await this.anomaliesService.findAllForDevice(deviceId);
-    }
-    
+  @Get(':deviceId/anomalies')
+  async findAllForDevice(
+    @Param('deviceId', ParseUUIDPipe) deviceId: string,
+  ): Promise<Anomaly[]> {
+    return await this.anomaliesService.findAllForDevice(deviceId);
+  }
 }

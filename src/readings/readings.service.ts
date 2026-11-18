@@ -5,7 +5,10 @@ import { Device, Reading } from '@prisma/client';
 import { AnomaliesService } from '../anomalies/anomalies.service';
 @Injectable()
 export class ReadingsService {
-  constructor(private readonly prisma: PrismaService, private readonly anomaliesService: AnomaliesService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly anomaliesService: AnomaliesService,
+  ) {}
 
   async create(deviceId: string, dto: CreateReadingDto): Promise<Reading> {
     const device = await this.prisma.device.findUnique({
@@ -14,8 +17,8 @@ export class ReadingsService {
     if (!device) {
       throw new NotFoundException(`Device ${deviceId} not found`);
     }
-   
-    const reading:Reading = await this.prisma.reading.create({
+
+    const reading: Reading = await this.prisma.reading.create({
       data: {
         deviceId,
         metric: dto.metric,
