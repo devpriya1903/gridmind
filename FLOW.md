@@ -2,7 +2,7 @@
 
 How control actually moves between **files that exist today**. Append when we add modules. Do **not** describe routes or services that are not in `src/` yet.
 
-Last updated: 2026-11-14 (`GET /devices/:deviceId/anomalies`).
+Last updated: 2026-11-18 (`evaluate` after `reading.create`).
 
 ---
 
@@ -20,10 +20,10 @@ Last updated: 2026-11-14 (`GET /devices/:deviceId/anomalies`).
 | `src/devices/devices.controller.ts` | `POST /devices`, `GET /devices`, `GET /devices/:id` |
 | `src/devices/dto/create-device.dto.ts` | Validates/trims POST body |
 | `src/devices/devices.service.ts` | Prisma create/list/findById; 409 unique name; 404 missing id |
-| `src/readings/readings.module.ts` | Registers readings controller + service |
+| `src/readings/readings.module.ts` | Readings + **imports `AnomaliesModule`** so `AnomaliesService` can be injected |
 | `src/readings/readings.controller.ts` | `POST/GET /devices/:deviceId/readings` |
 | `src/readings/dto/create-reading.dto.ts` | Validates metric, value, optional recordedAt |
-| `src/readings/readings.service.ts` | 404 if device missing; Prisma create/list readings |
+| `src/readings/readings.service.ts` | Create/list readings; after create, `anomaliesService.evaluate(reading)` |
 | `src/anomalies/anomalies.module.ts` | Registers anomalies controller + service |
 | `src/anomalies/anomalies.controller.ts` | `GET /devices/:deviceId/anomalies` |
 | `src/anomalies/anomalies.service.ts` | `evaluate` (power_kw thresholds); list by device |
@@ -58,8 +58,8 @@ npm run start:dev
         │  ConfigModule.forRoot (.env)
         │  PrismaModule (global) → constructs PrismaService → onModuleInit → $connect
         │  DevicesModule → DevicesService, DevicesController
-        │  ReadingsModule → ReadingsService, ReadingsController
         │  AnomaliesModule → AnomaliesService, AnomaliesController
+        │  ReadingsModule (imports AnomaliesModule) → ReadingsService, ReadingsController
         │  HealthModule → HealthController
         │  AppController / AppService
         ▼
@@ -172,11 +172,14 @@ HTTP POST /devices/:deviceId/readings  JSON body
   ReadingsService.create
         ├─ prisma.device.findUnique
         │     missing → NotFoundException → HTTP 404
-        └─ prisma.reading.create({ deviceId, metric, value, recordedAt? })
-              success → 201 JSON row (FK to Device)
+        ├─ prisma.reading.create(...)  → Reading row
+        ├─ anomaliesService.evaluate(reading)
+        │     not power_kw or value ≤ 50 → no Anomaly
+        │     power_kw > 50 → warning; > 100 → critical → prisma.anomaly.create
+        └─ return the Reading (201). The anomaly is a side effect, not the response.
 ```
 
-A reading cannot exist without a device: Postgres `Reading_deviceId_fkey` (`ON DELETE CASCADE`).
+A reading cannot exist without a device: Postgres `Reading_deviceId_fkey` (`ON DELETE CASCADE`). An anomaly cannot exist without a reading: `Anomaly_readingId_fkey`.
 
 ---
 
@@ -207,7 +210,7 @@ HTTP GET /devices/:deviceId/anomalies
         └─ prisma.anomaly.findMany({ where: { reading: { deviceId } }, orderBy: createdAt desc })
 ```
 
-`AnomaliesService.evaluate` exists (power_kw > 100 critical, > 50 warning) but **nothing calls it yet**. `ReadingsService.create` only inserts a reading. POST a spike and GET anomalies can still be `[]`.
+This list is filled only because `POST .../readings` already ran `evaluate`. A `power_kw` of `12.5` still yields `[]`; `80` yields a `warning`; `120` yields `critical`.
 
 ---
 
@@ -236,12 +239,12 @@ Does not check Redis.
 | `DevicesController.findById` | `src/devices/devices.controller.ts` | `GET /devices/:id` | `DevicesService.findById` |
 | `DevicesService.findById` | `src/devices/devices.service.ts` | controller | `device.findUnique`; missing → `NotFoundException` |
 | `ReadingsController.create` | `src/readings/readings.controller.ts` | `POST /devices/:deviceId/readings` | `ReadingsService.create` |
-| `ReadingsService.create` | `src/readings/readings.service.ts` | controller | `device.findUnique`; then `reading.create` |
+| `ReadingsService.create` | `src/readings/readings.service.ts` | controller | `device.findUnique`; `reading.create`; `anomaliesService.evaluate` |
 | `ReadingsController.findAll` | `src/readings/readings.controller.ts` | `GET /devices/:deviceId/readings` | `ReadingsService.findAllForDevice` |
 | `ReadingsService.findAllForDevice` | `src/readings/readings.service.ts` | controller | `device.findUnique`; then `reading.findMany` |
 | `AnomaliesController.findAllForDevice` | `src/anomalies/anomalies.controller.ts` | `GET /devices/:deviceId/anomalies` | `AnomaliesService.findAllForDevice` |
 | `AnomaliesService.findAllForDevice` | `src/anomalies/anomalies.service.ts` | controller | `device.findUnique`; then `anomaly.findMany` via reading.deviceId |
-| `AnomaliesService.evaluate` | `src/anomalies/anomalies.service.ts` | **not called yet** | `anomaly.create` if power_kw exceeds 50/100 |
+| `AnomaliesService.evaluate` | `src/anomalies/anomalies.service.ts` | `ReadingsService.create` | `anomaly.create` if `power_kw` exceeds 50/100; else `null` |
 | `HealthController.check` | `src/health/health.controller.ts` | `GET /health` | Terminus `pingCheck` |
 
 ---

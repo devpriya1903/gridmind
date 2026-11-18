@@ -427,7 +427,7 @@ When we tighten `CreateDeviceDto`, `@IsIn` this slug list (400 on unknown type).
 ## D019 — Anomalies: in-process rules on `power_kw`; GET list; no public POST
 
 - **Date:** 2026-11-14
-- **Status:** accepted (GET + `evaluate` exist; `evaluate` not yet called from `ReadingsService.create`)
+- **Status:** accepted
 
 **Context:** Phase 0 needs `getAlerts()` as REST. Clients must not invent anomaly rows.
 
@@ -440,7 +440,7 @@ When we tighten `CreateDeviceDto`, `@IsIn` this slug list (400 on unknown type).
 
 **Why in-process first:** one process, easy to debug. Queue comes when the simulator is loud.
 
-**Tradeoff:** Until ReadingsService calls `evaluate`, GET returns `[]` even after a spike.
+**Progress (2026-11-18):** `ReadingsModule` imports `AnomaliesModule`. `ReadingsService.create` calls `evaluate` after insert. `GET .../anomalies` can return rows.
 
 ---
 
@@ -486,4 +486,4 @@ These are on the target stack or were discussed, but **no implementation choice 
 | D016 | Reading belongs to Device; nested routes; metric+value |
 | D017 | Postman errors in Scripts (`sendRequest`), not extra requests |
 | D018 | Seven device types; metric+value per type; DTO IsIn later |
-| D019 | Anomalies GET + power_kw rules; evaluate not wired yet |
+| D019 | Anomalies GET + power_kw rules; evaluate after reading create |
