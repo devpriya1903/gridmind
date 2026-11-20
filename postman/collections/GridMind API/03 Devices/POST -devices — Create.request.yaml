@@ -7,28 +7,24 @@ description: |-
   solar_inverter, battery, smart_plug (CreateDeviceDto @IsIn). Unknown
   type → **400**. Duplicate `name` → **409**.
 
-  Pre-request sets a unique `deviceName`. After 201, scripts POST the
-  same name again (409) and POST type `inverter` (400). No extra requests.
+  `name` is typed in this body and can differ per device type (for example
+  `Meter-A` with `smart_meter`). It is not a collection variable. After 201,
+  scripts POST the same name again (409) and POST type `inverter` (400).
 method: POST
 url: "{{baseUrl}}/devices"
-examples: .resources/POST Create device.resources/examples
-order: 2000
 headers:
   Content-Type: application/json
 body:
   type: json
   content: |-
     {
-      "name": "{{deviceName}}",
+      "name": "Meter-A",
       "type": "smart_meter"
     }
 scripts:
-  - type: beforeRequest
-    code: pm.collectionVariables.set('deviceName', 'Inverter-' + Date.now());
-    language: text/javascript
   - type: afterResponse
     code: |-
-      const deviceName = pm.collectionVariables.get('deviceName');
+      const sent = JSON.parse(pm.request.body.raw);
       const baseUrl = pm.variables.get('baseUrl');
 
       pm.test('Status is 201', function () {
@@ -37,8 +33,8 @@ scripts:
       pm.test('Returns a device row', function () {
         const body = pm.response.json();
         pm.expect(body.id).to.be.a('string').and.not.empty;
-        pm.expect(body.name).to.eql(deviceName);
-        pm.expect(body.type).to.eql('smart_meter');
+        pm.expect(body.name).to.eql(sent.name);
+        pm.expect(body.type).to.eql(sent.type);
         pm.expect(body.status).to.eql('offline');
         pm.collectionVariables.set('deviceId', body.id);
       });
@@ -51,14 +47,14 @@ scripts:
             header: { 'Content-Type': 'application/json' },
             body: {
               mode: 'raw',
-              raw: JSON.stringify({ name: deviceName, type: 'smart_meter' }),
+              raw: JSON.stringify({ name: sent.name, type: sent.type }),
             },
           },
           function (err, res) {
             pm.test('Duplicate name returns 409', function () {
               pm.expect(err).to.equal(null);
               pm.expect(res.code).to.eql(409);
-              pm.expect(JSON.stringify(res.json())).to.include(deviceName);
+              pm.expect(JSON.stringify(res.json())).to.include(sent.name);
             });
           },
         );
@@ -85,3 +81,5 @@ scripts:
         );
       }
     language: text/javascript
+examples: .resources/POST -devices — Create.resources/examples
+order: 2000

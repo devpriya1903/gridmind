@@ -19,5 +19,4 @@ description: |-
   - Anomalies: GET /devices/:deviceId/anomalies
 variables:
   baseUrl: http://localhost:3000
-  deviceName: Inverter-01
   deviceId: ""
