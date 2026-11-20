@@ -3,9 +3,9 @@ name: POST /devices — Create
 description: |-
   DevicesController.create → DevicesService.create.
 
-  Pre-request sets a unique `deviceName` so the main Send is **201**.
-  The after-response script then POSTs the **same name again** and
-  expects **409** (Prisma P2002). No separate duplicate request.
+  `name` is typed in the body and can differ per device type. The
+  after-response script then POSTs the **same name again** and expects
+  **409** (Prisma P2002). No separate duplicate request.
 
   Optional `status` omitted → Prisma default `offline`.
 request:
@@ -17,7 +17,7 @@ request:
     type: json
     content: |-
       {
-        "name": "{{deviceName}}",
+        "name": "Meter-A",
         "type": "smart_meter"
       }
 response:
@@ -33,5 +33,5 @@ response:
     keep-alive: timeout=5
   body:
     type: json
-    content: '{"id":"4f9dd870-2d5b-43cb-b0ed-45d1039947a4","name":"Inverter-1794675898464","type":"smart_meter","status":"offline","createdAt":"2026-11-14T17:04:58.541Z","updatedAt":"2026-11-14T17:04:58.541Z"}'
+    content: '{"id":"4f9dd870-2d5b-43cb-b0ed-45d1039947a4","name":"Meter-A","type":"smart_meter","status":"offline","createdAt":"2026-11-14T17:04:58.541Z","updatedAt":"2026-11-14T17:04:58.541Z"}'
 order: 1794675913694
