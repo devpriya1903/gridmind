@@ -18,7 +18,8 @@ description: >-
   Unknown `deviceId` → **404**. Invalid UUID → **400**. Extra JSON keys →
   **400**.
 
-  List is newest `recordedAt` first.
+  GET list query (all optional): `metric`, `from`, `to` (ISO-8601).
+  Invalid dates → **400**. List is newest `recordedAt` first.
 
 
   Set `deviceId` by sending **POST /devices — Create** first, or paste a uuid

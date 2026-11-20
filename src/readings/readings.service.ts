@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateReadingDto } from './dto/create-reading.dto';
 import { Device, Reading } from '@prisma/client';
 import { AnomaliesService } from '../anomalies/anomalies.service';
+import { ListReadingsQueryDto } from './dto/list-readings-query.dto';
 @Injectable()
 export class ReadingsService {
   constructor(
@@ -30,7 +31,10 @@ export class ReadingsService {
     return reading;
   }
 
-  async findAllForDevice(deviceId: string): Promise<Reading[]> {
+  async findAllForDevice(
+    deviceId: string,
+    query: ListReadingsQueryDto,
+  ): Promise<Reading[]> {
     const device: Device | null = await this.prisma.device.findUnique({
       where: { id: deviceId },
     });
@@ -39,7 +43,18 @@ export class ReadingsService {
     }
 
     return await this.prisma.reading.findMany({
-      where: { deviceId },
+      where: {
+        deviceId,
+        ...(query.metric ? { metric: query.metric } : {}),
+        ...(query.from || query.to
+          ? {
+              recordedAt: {
+                ...(query.from ? { gte: new Date(query.from) } : {}),
+                ...(query.to ? { lte: new Date(query.to) } : {}),
+              },
+            }
+          : {}),
+      },
       orderBy: { recordedAt: 'desc' },
     });
   }

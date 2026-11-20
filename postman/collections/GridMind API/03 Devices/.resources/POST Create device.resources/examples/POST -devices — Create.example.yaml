@@ -18,7 +18,7 @@ request:
     content: |-
       {
         "name": "{{deviceName}}",
-        "type": "inverter"
+        "type": "smart_meter"
       }
 response:
   statusCode: 201
@@ -33,5 +33,5 @@ response:
     keep-alive: timeout=5
   body:
     type: json
-    content: '{"id":"4f9dd870-2d5b-43cb-b0ed-45d1039947a4","name":"Inverter-1794675898464","type":"inverter","status":"offline","createdAt":"2026-11-14T17:04:58.541Z","updatedAt":"2026-11-14T17:04:58.541Z"}'
+    content: '{"id":"4f9dd870-2d5b-43cb-b0ed-45d1039947a4","name":"Inverter-1794675898464","type":"smart_meter","status":"offline","createdAt":"2026-11-14T17:04:58.541Z","updatedAt":"2026-11-14T17:04:58.541Z"}'
 order: 1794675913694

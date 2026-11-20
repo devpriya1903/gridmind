@@ -3,11 +3,20 @@ name: GET /devices/:deviceId/readings — List
 description: |-
   ReadingsController.findAll → ReadingsService.findAllForDevice.
 
-  Needs `deviceId` from POST Create device.
-  Expect **200** array, newest `recordedAt` first.
-  Missing device → **404** (asserted via sendRequest).
+  Optional query (ListReadingsQueryDto): `metric`, `from`, `to` (ISO-8601).
+  Omitted query lists all readings. Bad `from`/`to` → **400** (sendRequest).
+  Missing device → **404** (sendRequest). Newest `recordedAt` first.
 method: GET
-url: "{{baseUrl}}/devices/{{deviceId}}/readings"
+url: "{{baseUrl}}/devices/{{deviceId}}/readings?from=2026-11-14T17:08:01.910Z"
+queryParams:
+  - key: metric
+    value: power_kw
+    disabled: true
+  - key: from
+    value: 2026-11-14T17:08:01.910Z
+  - key: to
+    value: 2026-11-14T18:08:01.910Z
+    disabled: true
 scripts:
   - type: afterResponse
     code: |-
@@ -31,6 +40,22 @@ scripts:
             pm.test('Missing device returns 404', function () {
               pm.expect(err).to.equal(null);
               pm.expect(res.code).to.eql(404);
+            });
+          },
+        );
+        pm.sendRequest(
+          {
+            url:
+              baseUrl +
+              '/devices/' +
+              pm.collectionVariables.get('deviceId') +
+              '/readings?from=not-a-date',
+            method: 'GET',
+          },
+          function (err, res) {
+            pm.test('Invalid from query returns 400', function () {
+              pm.expect(err).to.equal(null);
+              pm.expect(res.code).to.eql(400);
             });
           },
         );

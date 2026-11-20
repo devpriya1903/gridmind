@@ -8,7 +8,7 @@ Each entry answers: **what we chose, why, what we gave up, and what we explicitl
 
 ## How to add an entry
 
-1. Next number (`D020`, …).
+1. Next number (`D021`, …).
 2. Date (the day the choice was made).
 3. Status: `accepted` | `superseded by Dxxx` | `deferred`.
 4. Context, decision, reasons, tradeoff, alternatives.
@@ -384,7 +384,7 @@ Interview use: this file is the “why” behind the repo, not a tutorial.
 ## D018 — Simulated device catalog (seven types, one `Device.type` string)
 
 - **Date:** 2026-11-14
-- **Status:** accepted (catalog locked; DTO `IsIn` and simulator not coded yet)
+- **Status:** accepted (`CreateDeviceDto` `@IsIn` live; simulator not coded yet)
 
 **Context:** The architecture needs a device simulator (50–500 units). Each simulated unit should be a recognizable home/energy asset, not a generic `inverter`. `Device.type` is already a required string with no catalog.
 
@@ -418,7 +418,9 @@ When we tighten `CreateDeviceDto`, `@IsIn` this slug list (400 on unknown type).
 
 **Why one table:** Nest modules and agent tools stay `getUsage(deviceId)` regardless of HVAC vs charger. Per-type tables would explode modules.
 
-**Tradeoff:** Invalid types can still be inserted until the DTO `IsIn` lands. Accepted so anomalies stay the current Nest slice.
+**Tradeoff:** Existing rows with `type: inverter` remain until deleted; new POSTs cannot use that slug.
+
+**Progress (2026-11-18):** `@IsIn` is on `CreateDeviceDto`. Postman Create uses `smart_meter` and asserts 400 for `inverter`. Simulator still later.
 
 **Alternatives:** Prisma enum (migration every new type); subclass tables per device.
 
@@ -427,7 +429,7 @@ When we tighten `CreateDeviceDto`, `@IsIn` this slug list (400 on unknown type).
 ## D019 — Anomalies: in-process rules on `power_kw`; GET list; no public POST
 
 - **Date:** 2026-11-14
-- **Status:** accepted (GET + `evaluate` exist; `evaluate` not yet called from `ReadingsService.create`)
+- **Status:** accepted
 
 **Context:** Phase 0 needs `getAlerts()` as REST. Clients must not invent anomaly rows.
 
@@ -440,7 +442,22 @@ When we tighten `CreateDeviceDto`, `@IsIn` this slug list (400 on unknown type).
 
 **Why in-process first:** one process, easy to debug. Queue comes when the simulator is loud.
 
-**Tradeoff:** Until ReadingsService calls `evaluate`, GET returns `[]` even after a spike.
+**Progress (2026-11-18):** `ReadingsModule` imports `AnomaliesModule`. `ReadingsService.create` calls `evaluate` after insert. `GET .../anomalies` can return rows.
+
+---
+
+## D020 — GET readings query: optional `metric`, `from`, `to`
+
+- **Date:** 2026-11-20
+- **Status:** accepted
+
+**Context:** Phase 0 leftover so `getUsage()` can filter without a new route. Same path as list.
+
+**Decision:** `ListReadingsQueryDto` on `@Query()` of existing `GET /devices/:deviceId/readings`. All fields optional. `from`/`to` are ISO-8601 and map to Prisma `recordedAt` `gte`/`lte`. `metric` exact match. Invalid dates → **400**. No pagination yet.
+
+**Why query string, not `POST /readings/search`:** it is still a list of the same resource. Agent tools can pass the same params.
+
+**Tradeoff:** Unbounded lists until we add `take`/`skip`. Accepted for v1.
 
 ---
 
@@ -486,4 +503,5 @@ These are on the target stack or were discussed, but **no implementation choice 
 | D016 | Reading belongs to Device; nested routes; metric+value |
 | D017 | Postman errors in Scripts (`sendRequest`), not extra requests |
 | D018 | Seven device types; metric+value per type; DTO IsIn later |
-| D019 | Anomalies GET + power_kw rules; evaluate not wired yet |
+| D019 | Anomalies GET + power_kw rules; evaluate after reading create |
+| D020 | GET readings query metric/from/to |
