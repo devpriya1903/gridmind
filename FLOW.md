@@ -2,7 +2,7 @@
 
 How control actually moves between **files that exist today**. Append when we add modules. Do **not** describe routes or services that are not in `src/` yet.
 
-Last updated: 2026-11-18 (`evaluate` after `reading.create`).
+Last updated: 2026-11-20 (`GET readings` query: metric, from, to).
 
 ---
 
@@ -23,6 +23,7 @@ Last updated: 2026-11-18 (`evaluate` after `reading.create`).
 | `src/readings/readings.module.ts` | Readings + **imports `AnomaliesModule`** so `AnomaliesService` can be injected |
 | `src/readings/readings.controller.ts` | `POST/GET /devices/:deviceId/readings` |
 | `src/readings/dto/create-reading.dto.ts` | Validates metric, value, optional recordedAt |
+| `src/readings/dto/list-readings-query.dto.ts` | Optional `metric`, `from`, `to` (ISO-8601) on GET |
 | `src/readings/readings.service.ts` | Create/list readings; after create, `anomaliesService.evaluate(reading)` |
 | `src/anomalies/anomalies.module.ts` | Registers anomalies controller + service |
 | `src/anomalies/anomalies.controller.ts` | `GET /devices/:deviceId/anomalies` |
@@ -185,12 +186,23 @@ A reading cannot exist without a device: Postgres `Reading_deviceId_fkey` (`ON D
 
 ## Request: `GET /devices/:deviceId/readings`
 
+Optional query: `metric`, `from`, `to` (`ListReadingsQueryDto`). Invalid ISO-8601 on `from`/`to` → **400**.
+
 ```
-HTTP GET /devices/:deviceId/readings
-  → ReadingsController.findAll
-  → ReadingsService.findAllForDevice
+HTTP GET /devices/:deviceId/readings?metric=&from=&to=
+        │
+        ▼
+  ParseUUIDPipe + ValidationPipe (@Query ListReadingsQueryDto)
+        ▼
+  ReadingsController.findAll(deviceId, query)
+        ▼
+  ReadingsService.findAllForDevice
         ├─ device missing → 404
-        └─ prisma.reading.findMany({ where: { deviceId }, orderBy: recordedAt desc })
+        └─ prisma.reading.findMany
+              where.deviceId always
+              where.metric if query.metric
+              where.recordedAt gte/lte if from/to
+              orderBy recordedAt desc
 ```
 
 ---
@@ -241,7 +253,7 @@ Does not check Redis.
 | `ReadingsController.create` | `src/readings/readings.controller.ts` | `POST /devices/:deviceId/readings` | `ReadingsService.create` |
 | `ReadingsService.create` | `src/readings/readings.service.ts` | controller | `device.findUnique`; `reading.create`; `anomaliesService.evaluate` |
 | `ReadingsController.findAll` | `src/readings/readings.controller.ts` | `GET /devices/:deviceId/readings` | `ReadingsService.findAllForDevice` |
-| `ReadingsService.findAllForDevice` | `src/readings/readings.service.ts` | controller | `device.findUnique`; then `reading.findMany` |
+| `ReadingsService.findAllForDevice` | `src/readings/readings.service.ts` | controller | `device.findUnique`; `reading.findMany` with optional metric/from/to |
 | `AnomaliesController.findAllForDevice` | `src/anomalies/anomalies.controller.ts` | `GET /devices/:deviceId/anomalies` | `AnomaliesService.findAllForDevice` |
 | `AnomaliesService.findAllForDevice` | `src/anomalies/anomalies.service.ts` | controller | `device.findUnique`; then `anomaly.findMany` via reading.deviceId |
 | `AnomaliesService.evaluate` | `src/anomalies/anomalies.service.ts` | `ReadingsService.create` | `anomaly.create` if `power_kw` exceeds 50/100; else `null` |

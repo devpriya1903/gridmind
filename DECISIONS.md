@@ -8,7 +8,7 @@ Each entry answers: **what we chose, why, what we gave up, and what we explicitl
 
 ## How to add an entry
 
-1. Next number (`D020`, …).
+1. Next number (`D021`, …).
 2. Date (the day the choice was made).
 3. Status: `accepted` | `superseded by Dxxx` | `deferred`.
 4. Context, decision, reasons, tradeoff, alternatives.
@@ -446,6 +446,21 @@ When we tighten `CreateDeviceDto`, `@IsIn` this slug list (400 on unknown type).
 
 ---
 
+## D020 — GET readings query: optional `metric`, `from`, `to`
+
+- **Date:** 2026-11-20
+- **Status:** accepted
+
+**Context:** Phase 0 leftover so `getUsage()` can filter without a new route. Same path as list.
+
+**Decision:** `ListReadingsQueryDto` on `@Query()` of existing `GET /devices/:deviceId/readings`. All fields optional. `from`/`to` are ISO-8601 and map to Prisma `recordedAt` `gte`/`lte`. `metric` exact match. Invalid dates → **400**. No pagination yet.
+
+**Why query string, not `POST /readings/search`:** it is still a list of the same resource. Agent tools can pass the same params.
+
+**Tradeoff:** Unbounded lists until we add `take`/`skip`. Accepted for v1.
+
+---
+
 ## Explicitly not decided yet (do not pretend otherwise)
 
 These are on the target stack or were discussed, but **no implementation choice is locked** beyond “later”:
@@ -489,3 +504,4 @@ These are on the target stack or were discussed, but **no implementation choice 
 | D017 | Postman errors in Scripts (`sendRequest`), not extra requests |
 | D018 | Seven device types; metric+value per type; DTO IsIn later |
 | D019 | Anomalies GET + power_kw rules; evaluate after reading create |
+| D020 | GET readings query metric/from/to |
