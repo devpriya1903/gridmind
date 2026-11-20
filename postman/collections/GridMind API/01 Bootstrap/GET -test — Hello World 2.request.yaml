@@ -12,4 +12,5 @@ scripts:
         pm.expect(pm.response.text()).to.eql('Hello World 2!');
       });
     language: text/javascript
+settings: {}
 order: 2000

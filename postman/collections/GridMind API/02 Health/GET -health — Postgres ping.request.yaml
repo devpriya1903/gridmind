@@ -14,4 +14,5 @@ scripts:
         pm.expect(body.info.postgres.status).to.eql('up');
       });
     language: text/javascript
+settings: {}
 order: 1000
